@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f2f2f7;
+  --foreground: #000000;
+  --card: #ffffff;
+  --label2: rgb(60 60 67 / 0.6);
+  --separator: rgb(60 60 67 / 0.14);
+  --fill: rgb(120 120 128 / 0.12);
+  --blue: #007aff;
+  --blue-tint: rgb(0 122 255 / 0.12);
+  --orange: #ff9500;
+  color-scheme: light;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ios-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ios-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@theme inline {
+  --animate-ios-pop: ios-pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --color-brand: var(--blue);
+  --color-brand-tint: var(--blue-tint);
+  --color-card: var(--card);
+  --color-label2: var(--label2);
+  --color-separator: var(--separator);
+  --color-fill: var(--fill);
+  --color-ios-orange: var(--orange);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --animate-ios-in: ios-fade-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui,
+    "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

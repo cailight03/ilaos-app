@@ -1,0 +1,47 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { CalendarDays, ChefHat, LayoutDashboard, type LucideIcon } from "lucide-react";
+
+const TABS: { href: string; label: string; Icon: LucideIcon }[] = [
+  { href: "/", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/orders", label: "Orders", Icon: CalendarDays },
+  { href: "/recipe-calculator", label: "Recipes", Icon: ChefHat },
+];
+
+export function BottomNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav
+      aria-label="Main"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-separator bg-card/70 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150"
+    >
+      <ul className="mx-auto flex max-w-md">
+        {TABS.map(({ href, label, Icon }) => {
+          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          return (
+            <li key={href} className="flex-1">
+              <Link
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-[49px] flex-col items-center justify-center gap-0.5 pt-1 text-[10px] font-medium transition-[color,transform] duration-150 active:scale-95 ${
+                  active ? "text-brand" : "text-label2"
+                }`}
+              >
+                <Icon
+                  className="size-6"
+                  strokeWidth={active ? 2.25 : 1.75}
+                  fill={active && href === "/" ? "currentColor" : "none"}
+                  aria-hidden
+                />
+                {label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
