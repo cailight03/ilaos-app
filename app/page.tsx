@@ -31,7 +31,7 @@ const peso = new Intl.NumberFormat("en-PH", {
 export default function Home({ searchParams }: PageProps<"/">) {
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <PageHeader title="Dashboard" subtitle="Ilao&apos;s Microbakery">
           <form action={logout}>
             <button

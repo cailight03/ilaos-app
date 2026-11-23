@@ -11,7 +11,7 @@ import { OrdersView } from "./orders-view";
 export default function OrdersPage({ searchParams }: PageProps<"/orders">) {
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <Suspense fallback={<OrdersSkeleton />}>
           <Content searchParams={searchParams} />
         </Suspense>
