@@ -13,7 +13,8 @@ export function BottomNav() {
   );
 }
 
-async function Tabs() {
+/** Nav entries the signed-in user may see, plus the user, or null when signed out. */
+export async function getNavContext() {
   const user = await getAuthorizedUser();
   if (!user) return null;
 
@@ -25,6 +26,11 @@ async function Tabs() {
   if (canManageUsers(user)) {
     tabs.push({ key: "users", href: USER_MANAGEMENT_HREF, label: "Users" });
   }
-  if (tabs.length === 0) return null;
-  return <NavTabs tabs={tabs} />;
+  return { user, tabs };
+}
+
+async function Tabs() {
+  const ctx = await getNavContext();
+  if (!ctx || ctx.tabs.length === 0) return null;
+  return <NavTabs tabs={ctx.tabs} />;
 }

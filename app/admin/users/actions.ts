@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { logAudit } from "@/src/lib/audit-log";
 import { MODULE_KEYS } from "@/src/lib/modules";
 import { getOwner } from "@/src/lib/session";
 import {
@@ -32,6 +34,7 @@ const SELF_ERROR = "You can't change your own role or status, or remove yourself
 
 // Every action re-checks owner status against the database before doing anything.
 async function run(
+  action: string,
   work: (actorId: string) => Promise<ActionResult | void>,
 ): Promise<ActionResult> {
   const owner = await getOwner();
@@ -41,6 +44,7 @@ async function run(
     const result = await work(owner.id);
     if (result && !result.ok) return result;
     revalidatePath("/admin/users");
+    after(() => logAudit(owner.email, action, "Users"));
     return { ok: true };
   } catch (err) {
     if (
@@ -72,7 +76,7 @@ export async function saveUserAction(payload: SaveUserPayload): Promise<ActionRe
   }
   const role = payload.role;
 
-  return run(async (actorId) => {
+  return run(id ? "edit" : "create", async (actorId) => {
     // Owners and admins have full module access, so their grants are left alone; nobody edits their own access here.
     const isSelf = id === actorId;
     if (isSelf && (role !== "owner" || !payload.isActive)) return { ok: false, error: SELF_ERROR };
@@ -90,7 +94,7 @@ export async function saveUserAction(payload: SaveUserPayload): Promise<ActionRe
 export async function setUserActiveAction(id: string, active: boolean): Promise<ActionResult> {
   if (!UUID_RE.test(String(id))) return { ok: false, error: "Invalid account." };
   if (typeof active !== "boolean") return { ok: false, error: "Invalid request." };
-  return run(async (actorId) => {
+  return run("edit", async (actorId) => {
     if (id === actorId && !active) return { ok: false, error: SELF_ERROR };
     await setUserActive(id, active);
   });
@@ -98,7 +102,7 @@ export async function setUserActiveAction(id: string, active: boolean): Promise<
 
 export async function removeUserAction(id: string): Promise<ActionResult> {
   if (!UUID_RE.test(String(id))) return { ok: false, error: "Invalid account." };
-  return run(async (actorId) => {
+  return run("delete", async (actorId) => {
     if (id === actorId) return { ok: false, error: SELF_ERROR };
     await deleteUser(id);
   });

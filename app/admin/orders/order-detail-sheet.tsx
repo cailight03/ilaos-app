@@ -31,21 +31,42 @@ export function OrderDetailSheet({
     if (!order && dialog.open) dialog.close();
   }, [order]);
 
+  const [closing, setClosing] = useState(false);
+
+  // Slide down first; the dialog is really closed when that animation ends.
+  const requestClose = () => {
+    if (ref.current?.open) setClosing(true);
+  };
+
   const adjustment = order ? order.total - (itemsSubtotal(order) - order.discount) : 0;
   const row = "flex items-center justify-between gap-3 px-4 py-3 text-[17px]";
 
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      onClose={() => {
+        setClosing(false);
+        onClose();
+      }}
+      onCancel={(e) => {
+        e.preventDefault();
+        requestClose();
+      }}
+      onAnimationEnd={(e) => {
+        if (closing && e.target === ref.current) ref.current?.close();
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) ref.current?.close();
+        if (e.target === ref.current) requestClose();
       }}
       aria-labelledby="order-detail-title"
-      className="m-0 mt-auto w-full max-w-none overscroll-contain bg-transparent p-0 backdrop:bg-black/40 backdrop:backdrop-blur-[2px] open:animate-[sheet-up_300ms_cubic-bezier(0.22,1,0.36,1)]"
+      className={`m-0 mt-auto w-full max-w-none lg:m-auto lg:w-full lg:max-w-md overscroll-contain bg-transparent p-0 backdrop:bg-black/40 backdrop:backdrop-blur-[2px] backdrop:transition-opacity backdrop:duration-150 ${
+        closing
+          ? "animate-[sheet-down_160ms_cubic-bezier(0.4,0,1,1)_forwards] backdrop:opacity-0"
+          : "open:animate-[sheet-up_300ms_cubic-bezier(0.22,1,0.36,1)]"
+      }`}
     >
       {order && (
-        <div className="mx-auto max-h-[88dvh] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-[20px] bg-background px-4 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-foreground">
+        <div className="mx-auto max-h-[88dvh] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-[20px] bg-background lg:rounded-[20px] px-4 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-foreground">
           <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-label2/40" aria-hidden />
 
           <div className="flex items-start justify-between gap-3">
@@ -60,7 +81,7 @@ export function OrderDetailSheet({
             <button
               type="button"
               aria-label="Close"
-              onClick={() => ref.current?.close()}
+              onClick={requestClose}
               className="flex size-8 shrink-0 items-center justify-center rounded-full bg-fill text-label2 transition active:scale-90"
             >
               <X className="size-4" aria-hidden />

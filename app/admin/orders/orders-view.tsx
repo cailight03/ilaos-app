@@ -22,6 +22,7 @@ import { PageHeader } from "../_components/page-header";
 import { SelectRow } from "../_components/select-row";
 import { OrderCard } from "./order-card";
 import { OrderDetailSheet } from "./order-detail-sheet";
+import { OrdersTable } from "./orders-table";
 
 const REFRESH_MS = 60_000;
 const PAGE_SIZE = 30;
@@ -154,7 +155,7 @@ export function OrdersView({ initialOrders, initialSyncedAt, initialError, initi
         <Stat label="Sales" value={formatPeso(summary.totalSales)} />
       </section>
 
-      <div className="relative">
+      <div className="relative lg:max-w-md">
         <Search
           className="pointer-events-none absolute top-1/2 left-2.5 size-[18px] -translate-y-1/2 text-label2"
           aria-hidden
@@ -172,7 +173,7 @@ export function OrdersView({ initialOrders, initialSyncedAt, initialError, initi
       </div>
 
       <section aria-label="Filters">
-        <div className="rounded-xl border border-separator bg-card shadow-sm">
+        <div className="rounded-xl border border-separator bg-card shadow-sm lg:grid lg:grid-cols-3 lg:divide-x lg:divide-separator">
           <div className="group/row">
             <SelectRow
               label="Bake date"
@@ -219,13 +220,14 @@ export function OrdersView({ initialOrders, initialSyncedAt, initialError, initi
         </p>
       ) : (
         <>
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-3 lg:hidden">
             {shown.slice(0, visible).map((o) => (
               <li key={o.rowNumber} className="animate-ios-in">
                 <OrderCard order={o} duplicateId={duplicates.has(o.invoiceId)} onOpen={setSelected} />
               </li>
             ))}
           </ul>
+          <OrdersTable orders={shown.slice(0, visible)} duplicates={duplicates} onOpen={setSelected} />
           {shown.length > visible && (
             <button
               type="button"

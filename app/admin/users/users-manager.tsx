@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
 import Image from "next/image";
-import { Check, Pencil, Plus, Search, ShieldCheck, TriangleAlert, X } from "lucide-react";
+import { Check, Pencil, Plus, Search, ShieldCheck, TriangleAlert } from "lucide-react";
 import {
   removeUserAction,
   saveUserAction,
@@ -10,6 +10,7 @@ import {
   type ActionResult,
 } from "./actions";
 import type { Role } from "@/src/lib/users";
+import { SheetModal } from "../_components/sheet-modal";
 
 const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", staff: "Staff" };
 
@@ -133,6 +134,47 @@ export function UsersManager({
 
   const isSelfEditing = editor?.id === currentUserId;
 
+  const rowActions = (u: UserRow, isSelf: boolean) => (
+    <>
+      <button
+        type="button"
+        onClick={() => openEdit(u)}
+        className="flex h-9 items-center gap-1 rounded-lg bg-fill px-3 text-[15px] font-medium transition hover:opacity-80 active:opacity-70"
+      >
+        <Pencil className="size-4" aria-hidden />
+        Edit
+      </button>
+      {!isSelf &&
+        (u.isActive ? (
+          <button
+            type="button"
+            onClick={() => setConfirm({ kind: "deactivate", user: u })}
+            className="h-9 rounded-lg bg-fill px-3 text-[15px] font-medium transition hover:opacity-80 active:opacity-70"
+          >
+            Deactivate
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => reactivate(u)}
+            className="h-9 rounded-lg bg-fill px-3 text-[15px] font-medium transition hover:opacity-80 active:opacity-70 disabled:opacity-50"
+          >
+            Reactivate
+          </button>
+        ))}
+      {!isSelf && (
+        <button
+          type="button"
+          onClick={() => setConfirm({ kind: "remove", user: u })}
+          className="h-9 rounded-lg px-3 text-[15px] font-medium text-red-600 transition hover:opacity-80 active:opacity-70"
+        >
+          Remove
+        </button>
+      )}
+    </>
+  );
+
   return (
     <div className="flex animate-ios-in flex-col gap-5">
       <section aria-label="Summary" className="grid grid-cols-3 gap-2 md:gap-3">
@@ -194,7 +236,7 @@ export function UsersManager({
           No users match your filters.
         </p>
       ) : (
-        <ul className="overflow-hidden rounded-xl border border-separator bg-card shadow-sm">
+        <ul className="overflow-hidden rounded-xl border border-separator bg-card shadow-sm lg:hidden">
           {visible.map((u) => {
             const isSelf = u.id === currentUserId;
             return (
@@ -215,42 +257,7 @@ export function UsersManager({
                 <div className="flex flex-wrap items-center gap-2 md:justify-end">
                   <Badge tone={u.role === "staff" ? "muted" : "brand"}>{ROLE_LABEL[u.role]}</Badge>
                   <Badge tone={u.isActive ? "brand" : "muted"}>{u.isActive ? "Active" : "Inactive"}</Badge>
-                  <button
-                    type="button"
-                    onClick={() => openEdit(u)}
-                    className="flex h-9 items-center gap-1 rounded-lg bg-fill px-3 text-[15px] font-medium transition active:opacity-70"
-                  >
-                    <Pencil className="size-4" aria-hidden />
-                    Edit
-                  </button>
-                  {!isSelf &&
-                    (u.isActive ? (
-                      <button
-                        type="button"
-                        onClick={() => setConfirm({ kind: "deactivate", user: u })}
-                        className="h-9 rounded-lg bg-fill px-3 text-[15px] font-medium transition active:opacity-70"
-                      >
-                        Deactivate
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => reactivate(u)}
-                        className="h-9 rounded-lg bg-fill px-3 text-[15px] font-medium transition active:opacity-70 disabled:opacity-50"
-                      >
-                        Reactivate
-                      </button>
-                    ))}
-                  {!isSelf && (
-                    <button
-                      type="button"
-                      onClick={() => setConfirm({ kind: "remove", user: u })}
-                      className="h-9 rounded-lg px-3 text-[15px] font-medium text-red-600 transition active:opacity-70"
-                    >
-                      Remove
-                    </button>
-                  )}
+                  {rowActions(u, isSelf)}
                 </div>
               </li>
             );
@@ -258,8 +265,57 @@ export function UsersManager({
         </ul>
       )}
 
+      {visible.length > 0 && (
+        <div className="hidden overflow-hidden rounded-xl border border-separator bg-card shadow-sm lg:block">
+          <table className="w-full text-left text-[15px]">
+            <thead className="border-b border-separator text-[13px] text-label2">
+              <tr>
+                <th scope="col" className="px-4 py-3 font-medium">User</th>
+                <th scope="col" className="px-4 py-3 font-medium">Role</th>
+                <th scope="col" className="px-4 py-3 font-medium">Status</th>
+                <th scope="col" className="px-4 py-3 font-medium">Added</th>
+                <th scope="col" className="px-4 py-3 font-medium">Last login</th>
+                <th scope="col" className="px-4 py-3 text-right font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((u) => {
+                const isSelf = u.id === currentUserId;
+                return (
+                  <tr key={u.id} className="border-b border-separator last:border-b-0">
+                    <td className="px-4 py-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar user={u} />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">
+                            {u.name ?? u.email}
+                            {isSelf && <span className="text-label2"> (you)</span>}
+                          </p>
+                          {u.name && <p className="truncate text-[13px] text-label2">{u.email}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={u.role === "staff" ? "muted" : "brand"}>{ROLE_LABEL[u.role]}</Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={u.isActive ? "brand" : "muted"}>{u.isActive ? "Active" : "Inactive"}</Badge>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-label2">{u.addedAt}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-label2">{u.lastLogin ?? "Never signed in"}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">{rowActions(u, isSelf)}</div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {editor && (
-        <Modal title={editor.id ? "Edit user" : "Add user"} onClose={() => !pending && setEditor(null)}>
+        <SheetModal title={editor.id ? "Edit user" : "Add user"} dismissible={!pending} onClose={() => setEditor(null)}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -381,13 +437,13 @@ export function UsersManager({
               </button>
             </div>
           </form>
-        </Modal>
+        </SheetModal>
       )}
 
       {confirm && (
-        <Modal
+        <SheetModal
           title={confirm.kind === "remove" ? "Remove user?" : "Deactivate user?"}
-          onClose={() => !pending && setConfirm(null)}
+          dismissible={!pending} onClose={() => setConfirm(null)}
         >
           <div className="flex flex-col gap-4">
             {dialogError && <ErrorNote>{dialogError}</ErrorNote>}
@@ -415,13 +471,13 @@ export function UsersManager({
               </button>
             </div>
           </div>
-        </Modal>
+        </SheetModal>
       )}
 
       {toast && (
         <div
           role="status"
-          className={`fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-sm items-center gap-2 rounded-xl px-4 py-3 text-[15px] font-medium text-white shadow-lg ${
+          className={`fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-sm items-center gap-2 rounded-xl px-4 py-3 text-[15px] font-medium text-white shadow-lg lg:bottom-6 ${
             toast.ok ? "bg-green-600" : "bg-red-600"
           }`}
         >
@@ -491,39 +547,6 @@ function ErrorNote({ children }: { children: ReactNode }) {
     <div role="alert" className="flex items-start gap-2 rounded-xl bg-red-600/10 p-3 text-[15px] text-red-600">
       <TriangleAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
       {children}
-    </div>
-  );
-}
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center md:p-6" onClick={onClose}>
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92dvh] w-full max-w-md animate-ios-in flex-col gap-4 overflow-y-auto rounded-t-3xl bg-background p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl md:rounded-3xl"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-[22px] font-bold tracking-tight">{title}</h2>
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={onClose}
-            className="flex size-9 items-center justify-center rounded-full bg-fill text-label2 transition active:opacity-70"
-          >
-            <X className="size-5" aria-hidden />
-          </button>
-        </div>
-        {children}
-      </div>
     </div>
   );
 }

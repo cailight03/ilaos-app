@@ -71,7 +71,8 @@ export function RecipeCalculator({ initialBakeDate }: { initialBakeDate: string 
     "flex h-11 items-center justify-center gap-2 rounded-xl bg-card text-[17px] font-medium text-brand shadow-sm ring-1 ring-separator transition active:scale-[0.97] active:opacity-70 disabled:text-label2/50 disabled:active:scale-100";
 
   return (
-    <div className="flex animate-ios-in flex-col gap-5">
+    <div className="flex animate-ios-in flex-col gap-5 lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <div className="flex flex-col gap-5 lg:sticky lg:top-20">
       <section aria-label="Load from orders" className="flex flex-col gap-3">
         <DatePicker label="Bake date" value={bakeDate} onChange={setBakeDate} />
         <button
@@ -139,9 +140,16 @@ export function RecipeCalculator({ initialBakeDate }: { initialBakeDate: string 
         </button>
       </div>
 
-      {cards.map((card) => (
-        <IngredientCard key={card.id} card={card} />
-      ))}
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-5">
+      {cards.length > 0 && (
+      <div className="flex flex-col gap-5 xl:grid xl:grid-cols-2 xl:items-start">
+        {cards.map((card) => (
+          <IngredientCard key={card.id} card={card} />
+        ))}
+      </div>
+      )}
 
       <button
         type="button"
@@ -153,6 +161,7 @@ export function RecipeCalculator({ initialBakeDate }: { initialBakeDate: string 
       </button>
 
       <StarterCalculator request={starterRequest} />
+      </div>
     </div>
   );
 }

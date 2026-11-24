@@ -6,16 +6,18 @@ import {
   BarChart3,
   CalendarDays,
   ChefHat,
+  Wallet,
   LayoutDashboard,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
-const ICONS: Record<string, LucideIcon> = {
+export const NAV_ICONS: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   orders: CalendarDays,
   recipe_calculator: ChefHat,
   sales_reports: BarChart3,
+  costing_expenses: Wallet,
   users: Users,
 };
 
@@ -28,11 +30,11 @@ export function NavTabs({ tabs }: { tabs: NavTab[] }) {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-separator bg-card/70 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-separator bg-card/70 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden"
     >
       <ul className="mx-auto flex max-w-md">
         {tabs.map(({ key, href, label }) => {
-          const Icon = ICONS[key] ?? LayoutDashboard;
+          const Icon = NAV_ICONS[key] ?? LayoutDashboard;
           const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
           return (
             <li key={href} className="flex-1">

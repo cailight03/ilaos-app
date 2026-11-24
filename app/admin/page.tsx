@@ -17,6 +17,7 @@ import { requireModule } from "@/src/lib/session";
 import { ProfileCard } from "./_components/profile-card";
 import { BakeDateFilter, RefreshButton } from "./_components/controls";
 import { ThemeToggle } from "./_components/theme-toggle";
+import { PageMain } from "./_components/page-main";
 import { PageHeader } from "./_components/page-header";
 import { StatCard } from "./_components/stat-card";
 import { ProductBreakdown } from "./_components/product-breakdown";
@@ -32,14 +33,16 @@ const peso = new Intl.NumberFormat("en-PH", {
 export default function Home({ searchParams }: PageProps<"/admin">) {
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
-        <PageHeader title="Dashboard" subtitle="Ilao&apos;s Microbakery">
-          <ThemeToggle />
-        </PageHeader>
+      <PageMain>
+        <div className="lg:hidden">
+          <PageHeader title="Dashboard" subtitle="Ilao&apos;s Microbakery">
+            <ThemeToggle />
+          </PageHeader>
+        </div>
         <Suspense fallback={<DashboardSkeleton />}>
           <Dashboard searchParams={searchParams} />
         </Suspense>
-      </main>
+      </PageMain>
     </>
   );
 }
@@ -80,28 +83,31 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
   const query = `?bakeDate=${stats.bakeDate ?? "all"}`;
 
   return (
-    <div className="flex animate-ios-in flex-col gap-5">
-      <div className="flex items-center gap-3">
+    <div className="flex animate-ios-in flex-col gap-5 lg:grid lg:grid-cols-3 lg:items-start lg:gap-6">
+      <div className="flex items-center gap-3 lg:col-span-3 lg:max-w-xl">
         <div className="min-w-0 flex-1">
           <BakeDateFilter dates={stats.availableBakeDates} value={stats.bakeDate} />
         </div>
         <RefreshButton />
       </div>
 
-      <section className="grid grid-cols-2 gap-3" aria-label="Summary">
-        <StatCard label="Total orders" value={String(stats.totalOrders)} Icon={Package} />
-        <StatCard label="Total sales" value={peso.format(stats.totalSales)} Icon={BadgeDollarSign} />
-      </section>
+      <div className="flex flex-col gap-5 lg:col-span-2">
+        <section className="grid grid-cols-2 gap-3 lg:gap-5" aria-label="Summary">
+          <StatCard label="Total orders" value={String(stats.totalOrders)} Icon={Package} />
+          <StatCard label="Total sales" value={peso.format(stats.totalSales)} Icon={BadgeDollarSign} />
+        </section>
 
-      <ProductBreakdown items={stats.productBreakdown} />
+        <ProductBreakdown items={stats.productBreakdown} />
 
-      {stats.warnings.duplicateInvoiceIds.length > 0 && (
-        <DismissibleWarning>
-          {stats.warnings.duplicateInvoiceIds.length} duplicate Invoice ID(s) found and counted as
-          separate orders: {stats.warnings.duplicateInvoiceIds.join(", ")}
-        </DismissibleWarning>
-      )}
+        {stats.warnings.duplicateInvoiceIds.length > 0 && (
+          <DismissibleWarning>
+            {stats.warnings.duplicateInvoiceIds.length} duplicate Invoice ID(s) found and counted as
+            separate orders: {stats.warnings.duplicateInvoiceIds.join(", ")}
+          </DismissibleWarning>
+        )}
+      </div>
 
+      <div className="flex flex-col gap-5">
       <ShortcutList
         items={[
           { key: "orders", label: "View orders", Icon: ClipboardList, href: `/admin/orders${query}` },
@@ -121,7 +127,10 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
           )}
       />
 
-      <ProfileCard user={user} />
+      <div className="lg:hidden">
+        <ProfileCard user={user} />
+      </div>
+      </div>
     </div>
   );
 }

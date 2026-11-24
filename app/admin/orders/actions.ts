@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+import { logAudit } from "@/src/lib/audit-log";
 import { SheetsError } from "@/src/lib/google-sheets";
 import { StaleOrderError, writeOrderPaid, type SetPaidResult } from "@/src/lib/payments";
 import { getUserForModule } from "@/src/lib/session";
@@ -9,7 +11,8 @@ export async function setOrderPaid(
   invoiceId: string,
   paid: boolean,
 ): Promise<SetPaidResult> {
-  if (!(await getUserForModule("orders"))) {
+  const user = await getUserForModule("orders");
+  if (!user) {
     return { ok: false, error: "You don't have access to orders." };
   }
   if (!Number.isInteger(rowNumber) || rowNumber < 2 || typeof paid !== "boolean") {
@@ -18,6 +21,7 @@ export async function setOrderPaid(
 
   try {
     await writeOrderPaid(rowNumber, String(invoiceId ?? ""), paid);
+    after(() => logAudit(user.email, paid ? "mark paid" : "mark unpaid", "Orders"));
     return { ok: true, paid };
   } catch (err) {
     if (err instanceof StaleOrderError) return { ok: false, error: err.message };

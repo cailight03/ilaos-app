@@ -31,7 +31,7 @@ export function SelectRow({
           <span className="flex size-7 shrink-0 items-center justify-center rounded-[7px] bg-brand text-white">
             <Icon className="size-4" aria-hidden />
           </span>
-          <span className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 border-b border-separator pr-3.5 text-[17px] group-last/row:border-b-0">
+          <span className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 border-b border-separator pr-3.5 text-[17px] group-last/row:border-b-0 lg:border-b-0">
             {label}
             <span className="flex min-w-0 items-center gap-1 text-label2">
               <span className="truncate">{current}</span>

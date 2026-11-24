@@ -162,7 +162,7 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
         </div>
       ) : (
         <>
-          <section className="grid grid-cols-2 gap-3" aria-label="Summary">
+          <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-5" aria-label="Summary">
             <StatCard label="Total sales" value={formatPeso(summary.totalSales)} Icon={BadgeDollarSign} />
             <StatCard label="Total orders" value={nf.format(summary.totalOrders)} Icon={Receipt} />
             <StatCard label="Products sold" value={nf.format(summary.totalProducts)} Icon={Package} />
@@ -179,7 +179,10 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
             <GrowthCard growth={report.growth} comparison={report.comparison} />
           </section>
 
+          <div className="flex flex-col gap-5 lg:grid lg:grid-cols-3 lg:items-start lg:gap-5">
+
           <Section
+            className="lg:order-1 lg:col-span-2"
             title="Sales trend"
             aside={
               report.growth !== null && (
@@ -229,6 +232,7 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
           </Section>
 
           <Section
+            className="lg:order-3 lg:col-span-2"
             title="Product performance"
             aside={
               <span className="text-[13px] text-label2">{nf.format(summary.totalProducts)} sold</span>
@@ -245,7 +249,38 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
                 onChange={setSort}
               />
             </div>
-            <ul>
+            <table className="hidden w-full text-left text-[15px] lg:table">
+              <thead className="border-b border-separator text-[13px] text-label2">
+                <tr>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Product</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">Units</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">% of units</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">Revenue</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">% of revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p) => (
+                  <tr key={p.product} className="border-b border-separator last:border-b-0">
+                    <td className="px-4 py-2.5">
+                      <span className="flex items-center gap-2">
+                        <span
+                          aria-hidden
+                          className="size-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: productColor(p.product) }}
+                        />
+                        {p.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right tabular-nums">{nf.format(p.quantity)}</td>
+                    <td className="px-4 py-2.5 text-right text-label2 tabular-nums">{pct(p.unitShare)}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums">{formatPeso(p.revenue)}</td>
+                    <td className="px-4 py-2.5 text-right text-label2 tabular-nums">{pct(p.revenueShare)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <ul className="lg:hidden">
               {products.map((p) => (
                 <li key={p.product} className="border-b border-separator px-4 py-3 last:border-b-0">
                   <div className="flex items-baseline justify-between gap-3">
@@ -274,13 +309,13 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
             )}
           </Section>
 
-          <Section title="Best sellers" aside={<span className="text-[13px] text-label2">by {sort === "quantity" ? "units" : "revenue"}</span>}>
+          <Section className="lg:order-4" title="Best sellers" aside={<span className="text-[13px] text-label2">by {sort === "quantity" ? "units" : "revenue"}</span>}>
             <div className="px-4 py-4">
               <ProductBarChart products={products} metric={sort} />
             </div>
           </Section>
 
-          <Section title="Revenue distribution">
+          <Section className="lg:order-2" title="Revenue distribution">
             <div className="px-4 py-4">
               <RevenueDonut
                 products={products}
@@ -315,10 +350,37 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
           </Section>
 
           <Section
+            className="lg:order-5 lg:col-span-2"
             title="Bake days"
             aside={<span className="text-[13px] text-label2">{report.bakeDays.length} total</span>}
           >
-            <ul>
+            <table className="hidden w-full text-left text-[15px] lg:table">
+              <thead className="border-b border-separator text-[13px] text-label2">
+                <tr>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Bake date</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">Orders</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">Products</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">Avg. order</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium">Sales</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.bakeDays.slice(0, bakeDaysShown).map((d) => (
+                  <tr key={d.date} className="border-b border-separator transition-colors last:border-b-0 hover:bg-fill">
+                    <td className="px-4 py-2.5">
+                      <Link href={`/admin/orders?bakeDate=${d.date}`} className="text-brand hover:underline">
+                        {formatBakeDate(d.date)}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-2.5 text-right tabular-nums">{d.orders}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums">{d.products}</td>
+                    <td className="px-4 py-2.5 text-right text-label2 tabular-nums">{formatPeso(d.averageOrderValue)}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums">{formatPeso(d.sales)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <ul className="lg:hidden">
               {report.bakeDays.slice(0, bakeDaysShown).map((d) => (
                 <li key={d.date} className="border-b border-separator last:border-b-0">
                   <Link
@@ -349,7 +411,7 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
             )}
           </Section>
 
-          <Section title="Customer insights">
+          <Section className="lg:order-6" title="Customer insights">
             {report.customers ? (
               <div className="p-4">
                 <div className="grid grid-cols-2 gap-3">
@@ -381,11 +443,12 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
               </p>
             )}
           </Section>
+          </div>
 
           <button
             type="button"
             onClick={exportCsv}
-            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-brand text-[17px] font-semibold text-white transition active:scale-[0.98] active:opacity-80"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-brand text-[17px] font-semibold text-white transition active:scale-[0.98] active:opacity-80 lg:self-end lg:px-6"
           >
             <Download className="size-5" aria-hidden />
             Export CSV
@@ -399,14 +462,16 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
 function Section({
   title,
   aside,
+  className = "",
   children,
 }: {
   title: string;
+  className?: string;
   aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section aria-label={title}>
+    <section aria-label={title} className={className}>
       <div className="mb-1.5 flex items-baseline justify-between px-4">
         <h2 className="text-[13px] text-label2 uppercase">{title}</h2>
         {aside}

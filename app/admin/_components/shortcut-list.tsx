@@ -34,7 +34,7 @@ export function ShortcutList({ items }: { items: ShortcutItem[] }) {
           return (
             <li key={label} className="group/row">
               {href ? (
-                <Link href={href} className="flex items-center gap-3 pl-4 transition-colors active:bg-fill">
+                <Link href={href} className="flex items-center gap-3 pl-4 transition-colors hover:bg-fill active:bg-fill">
                   {inner}
                 </Link>
               ) : (

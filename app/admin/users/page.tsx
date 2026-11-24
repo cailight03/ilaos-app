@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PageMain } from "../_components/page-main";
 import { TriangleAlert } from "lucide-react";
 import { MODULES } from "@/src/lib/modules";
 import { requireOwner } from "@/src/lib/session";
@@ -9,11 +10,11 @@ import { UsersManager, type UserRow } from "./users-manager";
 export default function UsersPage() {
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))] md:max-w-3xl">
+      <PageMain>
         <Suspense fallback={<UsersSkeleton />}>
           <Content />
         </Suspense>
-      </main>
+      </PageMain>
     </>
   );
 }

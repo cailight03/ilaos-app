@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PageMain } from "../_components/page-main";
 import { PageHeader } from "../_components/page-header";
 import { requireModule } from "@/src/lib/session";
 import { getSheetRows } from "@/src/lib/google-sheets";
@@ -8,12 +9,12 @@ import { RecipeCalculator } from "./recipe-calculator";
 export default function RecipeCalculatorPage({ searchParams }: PageProps<"/admin/recipe-calculator">) {
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <PageMain>
         <PageHeader title="Recipes" subtitle="Recipe calculator" />
         <Suspense fallback={<RecipeSkeleton />}>
           <Content searchParams={searchParams} />
         </Suspense>
-      </main>
+      </PageMain>
     </>
   );
 }

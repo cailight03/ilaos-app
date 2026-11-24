@@ -35,6 +35,15 @@
   }
 }
 
+@keyframes sheet-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
 @keyframes ios-fade-in {
   from {
     opacity: 0;

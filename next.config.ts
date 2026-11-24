@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     // Reuse visited pages in the browser so switching modules is instant.
     // Server actions, API routes and fresh page loads still re-check access.
     staleTimes: { dynamic: 120, static: 300 },
+    // Receipt uploads (5 MB max) travel in a server action.
+    serverActions: { bodySizeLimit: "6mb" },
   },
   cacheComponents: true,
   images: {

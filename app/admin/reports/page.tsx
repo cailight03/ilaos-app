@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PageMain } from "../_components/page-main";
 import { TriangleAlert } from "lucide-react";
 import { SheetsError } from "@/src/lib/google-sheets";
 import { fetchReportOrders } from "@/src/lib/reports-service";
@@ -11,11 +12,11 @@ import { ReportsView } from "./reports-view";
 export default function ReportsPage() {
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <PageMain>
         <Suspense fallback={<ReportsSkeleton />}>
           <Content />
         </Suspense>
-      </main>
+      </PageMain>
     </>
   );
 }
