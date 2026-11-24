@@ -16,6 +16,7 @@ import { hasSession } from "@/src/lib/session";
 import { logout } from "./login/actions";
 import { BakeDateFilter, RefreshButton } from "./_components/controls";
 import { BottomNav } from "./_components/bottom-nav";
+import { ThemeToggle } from "./_components/theme-toggle";
 import { PageHeader } from "./_components/page-header";
 import { StatCard } from "./_components/stat-card";
 import { ProductBreakdown } from "./_components/product-breakdown";
@@ -33,14 +34,17 @@ export default function Home({ searchParams }: PageProps<"/">) {
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <PageHeader title="Dashboard" subtitle="Ilao&apos;s Microbakery">
-          <form action={logout}>
-            <button
-              aria-label="Lock"
-              className="flex size-11 items-center justify-center rounded-full bg-card text-brand shadow-sm ring-1 ring-separator transition active:scale-90 active:opacity-70"
-            >
-              <Lock className="size-5" aria-hidden />
-            </button>
-          </form>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <form action={logout}>
+              <button
+                aria-label="Lock"
+                className="flex size-11 items-center justify-center rounded-full bg-card text-brand shadow-sm ring-1 ring-separator transition active:scale-90 active:opacity-70"
+              >
+                <Lock className="size-5" aria-hidden />
+              </button>
+            </form>
+          </div>
         </PageHeader>
         <Suspense fallback={<DashboardSkeleton />}>
           <Dashboard searchParams={searchParams} />
@@ -113,7 +117,7 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/">["searc
         items={[
           { label: "View orders", Icon: ClipboardList, href: `/orders${query}` },
           { label: "Recipe calculator", Icon: ChefHat, href: `/recipe-calculator${query}` },
-          { label: "Sales reports", Icon: BarChart3 },
+          { label: "Sales reports", Icon: BarChart3, href: "/reports" },
         ]}
       />
     </div>

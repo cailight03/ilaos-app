@@ -30,6 +30,8 @@ export type Order = {
   total: number;
   coupon: string | null; // "Coupon used:" code, if any
   discount: number; // explicit "Discount:" amount (positive), 0 if none listed
+  email?: string; // "Email for Invoice" column, if the sheet has one
+  mobile?: string; // "Mobile Number" column, if the sheet has one
 };
 
 // Matched by header prefix so column reordering or long header text won't break parsing.
@@ -80,10 +82,16 @@ function parseMoney(raw: string | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function findOptionalColumn(header: string[], prefix: string): number {
+  return header.findIndex((h) => h?.trim().toLowerCase().startsWith(prefix.toLowerCase()));
+}
+
 export function parseOrders(rows: string[][]): Order[] {
   if (rows.length === 0) return [];
   const col = mapColumns(rows[0]);
   const paymentCol = findPaymentColumn(rows[0]);
+  const emailCol = findOptionalColumn(rows[0], "Email");
+  const mobileCol = findOptionalColumn(rows[0], "Mobile");
   const orders: Order[] = [];
 
   rows.slice(1).forEach((row, i) => {
@@ -103,6 +111,8 @@ export function parseOrders(rows: string[][]): Order[] {
       total: parseMoney(row[col.total]),
       coupon: parseCoupon(productsRaw),
       discount: parseDiscount(productsRaw),
+      email: emailCol === -1 ? undefined : row[emailCol]?.trim(),
+      mobile: mobileCol === -1 ? undefined : row[mobileCol]?.trim(),
     });
   });
 

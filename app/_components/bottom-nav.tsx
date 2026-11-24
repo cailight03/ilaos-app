@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ChefHat, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { BarChart3, CalendarDays, ChefHat, LayoutDashboard, type LucideIcon } from "lucide-react";
 
 const TABS: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/", label: "Dashboard", Icon: LayoutDashboard },
   { href: "/orders", label: "Orders", Icon: CalendarDays },
   { href: "/recipe-calculator", label: "Recipes", Icon: ChefHat },
+  { href: "/reports", label: "Reports", Icon: BarChart3 },
 ];
 
 export function BottomNav() {
