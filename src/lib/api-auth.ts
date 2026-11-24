@@ -1,15 +1,26 @@
 import "server-only";
 import { timingSafeEqual, createHash } from "node:crypto";
-import { hasSession } from "./session";
+import type { ModuleKey } from "./modules";
+import { getAuthorizedUser } from "./session";
+import { canAccessModule } from "./authorization";
 
 const digest = (v: string) => createHash("sha256").update(v).digest();
 
 /**
- * Allows either a signed-in browser session (PIN login) or `Authorization: Bearer <API_SECRET>`.
+ * Allows either a signed-in browser session whose account has access to `moduleKey`, or
+ * `Authorization: Bearer <API_SECRET>` (machine access).
  * Returns an error Response, or null if the request is authorized.
  */
-export async function requireApiAuth(request: Request): Promise<Response | null> {
-  if (await hasSession()) return null;
+export async function requireApiModule(
+  request: Request,
+  moduleKey: ModuleKey,
+): Promise<Response | null> {
+  const user = await getAuthorizedUser();
+  if (user) {
+    return canAccessModule(user, moduleKey)
+      ? null
+      : Response.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const secret = process.env.API_SECRET;
   if (!secret) {

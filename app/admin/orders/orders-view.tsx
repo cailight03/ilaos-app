@@ -49,7 +49,11 @@ export function OrdersView({ initialOrders, initialSyncedAt, initialError, initi
     try {
       const res = await fetch("/api/orders/view", { cache: "no-store" });
       if (res.status === 401) {
-        router.push("/login");
+        router.push("/admin/login");
+        return;
+      }
+      if (res.status === 403) {
+        router.push("/admin/access-denied");
         return;
       }
       const body = await res.json();

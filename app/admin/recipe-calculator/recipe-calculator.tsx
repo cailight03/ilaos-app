@@ -9,9 +9,9 @@ import {
   totalPieces,
 } from "@/src/lib/recipe-calc";
 import { RECIPES, type Quantities, type RecipeId } from "@/src/lib/recipes";
-import { DatePicker } from "@/app/_components/date-picker";
-import { IngredientCard } from "@/app/_components/ingredient-card";
-import { QuantityInput } from "@/app/_components/quantity-input";
+import { DatePicker } from "@/app/admin/_components/date-picker";
+import { IngredientCard } from "@/app/admin/_components/ingredient-card";
+import { QuantityInput } from "@/app/admin/_components/quantity-input";
 import { totalStarterGrams } from "@/src/lib/starter-calc";
 import { loadQuantitiesFromOrders } from "./actions";
 import { StarterCalculator, type StarterRequest } from "./starter-calculator";

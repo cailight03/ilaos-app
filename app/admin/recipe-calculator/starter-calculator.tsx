@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, RotateCcw } from "lucide-react";
+import { Check, Copy, RotateCcw, X } from "lucide-react";
 import {
   STARTER_DEFAULTS,
   calculateStarter,
@@ -174,6 +174,9 @@ export function StarterCalculator({ request }: { request: StarterRequest | null 
 
 function Results({ result, mode }: { result: ReturnType<typeof calculateStarter>; mode: StarterMode }) {
   const box = "rounded-xl border border-separator bg-card p-4 text-[15px] text-label2 shadow-sm";
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  const dismiss = (key: string) => setDismissed((d) => [...d, key]);
+  const closeBtn = "shrink-0 rounded-full p-1 opacity-70 hover:opacity-100";
 
   if (result.status === "waiting") {
     return (
@@ -240,19 +243,41 @@ function Results({ result, mode }: { result: ReturnType<typeof calculateStarter>
         </p>
       </div>
 
-      {result.beyondMaxRatio && (
-        <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-[15px] text-red-600">
-          Warning: the maximum ratio is 1:10 starter to flour. This feeding is 1:{Math.round((result.flour / result.starter) * 10) / 10}, which
-          is too dilute. Use more starter or less flour.
-        </p>
+      {result.beyondMaxRatio && !dismissed.includes("max") && (
+        <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-[15px] text-red-600">
+          <p className="flex-1">
+            Warning: the maximum ratio is 1:10 starter to flour. This feeding is 1:{Math.round((result.flour / result.starter) * 10) / 10}, which
+            is too dilute. Use more starter or less flour.
+          </p>
+          <button type="button" aria-label="Dismiss warning" onClick={() => dismiss("max")} className={closeBtn}>
+            <X size={18} />
+          </button>
+        </div>
       )}
 
-      {mode === "limited" && (
-        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-[15px] text-amber-700">
-          {result.belowStandard
-            ? `This feeding uses ${formatPercent1(result.starterPercent)} starter, below your standard ${formatPercent1(result.configuredStarterPercent ?? 0)}. A lower starter percentage may need a longer fermentation time. Timing depends on temperature and starter activity, so watch the starter rather than the clock.`
-            : "A lower starter percentage may need a longer fermentation time. Timing depends on temperature and starter activity, so watch the starter rather than the clock."}
-        </p>
+      {mode === "limited" && result.belowStandard && !dismissed.includes(`below-${result.starterPercent}`) && (
+        <div role="alert" className="flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-neutral-600 shadow-sm [[data-theme=dark]_&]:border-transparent [[data-theme=dark]_&]:bg-neutral-800 [[data-theme=dark]_&]:text-neutral-400">
+          <span aria-hidden="true" className="text-[28px] leading-none">
+            ⚠️
+          </span>
+          <p className="flex-1 text-[15px] leading-relaxed">
+            {`This feeding uses ${formatPercent1(result.starterPercent)} starter, below your standard ${formatPercent1(result.configuredStarterPercent ?? 0)}. A lower starter percentage may need a longer fermentation time. Timing depends on temperature and starter activity, so watch the starter rather than the clock.`}
+          </p>
+          <button type="button" aria-label="Dismiss warning" onClick={() => dismiss(`below-${result.starterPercent}`)} className={closeBtn}>
+            <X size={18} />
+          </button>
+        </div>
+      )}
+
+      {mode === "limited" && !result.belowStandard && !dismissed.includes("note") && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-[15px] text-amber-700">
+          <p className="flex-1">
+            A lower starter percentage may need a longer fermentation time. Timing depends on temperature and starter activity, so watch the starter rather than the clock.
+          </p>
+          <button type="button" aria-label="Dismiss note" onClick={() => dismiss("note")} className={closeBtn}>
+            <X size={18} />
+          </button>
+        </div>
       )}
     </div>
   );

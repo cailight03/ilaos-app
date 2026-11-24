@@ -1,13 +1,12 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 import { BottomNav } from "../_components/bottom-nav";
 import { PageHeader } from "../_components/page-header";
-import { hasSession } from "@/src/lib/session";
+import { requireModule } from "@/src/lib/session";
 import { getSheetRows } from "@/src/lib/google-sheets";
 import { parseOrders } from "@/src/lib/orders";
 import { RecipeCalculator } from "./recipe-calculator";
 
-export default function RecipeCalculatorPage({ searchParams }: PageProps<"/recipe-calculator">) {
+export default function RecipeCalculatorPage({ searchParams }: PageProps<"/admin/recipe-calculator">) {
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
@@ -24,9 +23,9 @@ export default function RecipeCalculatorPage({ searchParams }: PageProps<"/recip
 async function Content({
   searchParams,
 }: {
-  searchParams: PageProps<"/recipe-calculator">["searchParams"];
+  searchParams: PageProps<"/admin/recipe-calculator">["searchParams"];
 }) {
-  if (!(await hasSession())) redirect("/login");
+  await requireModule("recipe_calculator");
   const { bakeDate } = await searchParams;
   let initial =
     typeof bakeDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(bakeDate) ? bakeDate : "";

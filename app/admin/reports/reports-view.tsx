@@ -322,7 +322,7 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
               {report.bakeDays.slice(0, bakeDaysShown).map((d) => (
                 <li key={d.date} className="border-b border-separator last:border-b-0">
                   <Link
-                    href={`/orders?bakeDate=${d.date}`}
+                    href={`/admin/orders?bakeDate=${d.date}`}
                     className="flex min-h-14 items-center gap-3 py-2.5 pr-3 pl-4 transition-colors active:bg-fill"
                   >
                     <span className="min-w-0 flex-1">

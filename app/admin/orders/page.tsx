@@ -1,14 +1,13 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 import { SheetsError } from "@/src/lib/google-sheets";
 import { fetchOrders } from "@/src/lib/orders-service";
-import { hasSession } from "@/src/lib/session";
+import { requireModule } from "@/src/lib/session";
 import type { Order } from "@/src/lib/orders";
 import { bakeDatesOf } from "@/src/lib/order-view";
 import { BottomNav } from "../_components/bottom-nav";
 import { OrdersView } from "./orders-view";
 
-export default function OrdersPage({ searchParams }: PageProps<"/orders">) {
+export default function OrdersPage({ searchParams }: PageProps<"/admin/orders">) {
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))]">
@@ -21,8 +20,8 @@ export default function OrdersPage({ searchParams }: PageProps<"/orders">) {
   );
 }
 
-async function Content({ searchParams }: { searchParams: PageProps<"/orders">["searchParams"] }) {
-  if (!(await hasSession())) redirect("/login");
+async function Content({ searchParams }: { searchParams: PageProps<"/admin/orders">["searchParams"] }) {
+  await requireModule("orders");
 
   const { bakeDate } = await searchParams;
   const requested =

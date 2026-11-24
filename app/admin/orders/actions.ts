@@ -2,14 +2,16 @@
 
 import { SheetsError } from "@/src/lib/google-sheets";
 import { StaleOrderError, writeOrderPaid, type SetPaidResult } from "@/src/lib/payments";
-import { hasSession } from "@/src/lib/session";
+import { getUserForModule } from "@/src/lib/session";
 
 export async function setOrderPaid(
   rowNumber: number,
   invoiceId: string,
   paid: boolean,
 ): Promise<SetPaidResult> {
-  if (!(await hasSession())) return { ok: false, error: "Session expired. Please sign in again." };
+  if (!(await getUserForModule("orders"))) {
+    return { ok: false, error: "You don't have access to orders." };
+  }
   if (!Number.isInteger(rowNumber) || rowNumber < 2 || typeof paid !== "boolean") {
     return { ok: false, error: "Invalid order." };
   }

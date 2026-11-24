@@ -2,16 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, ChefHat, LayoutDashboard, type LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  CalendarDays,
+  ChefHat,
+  LayoutDashboard,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
-const TABS: { href: string; label: string; Icon: LucideIcon }[] = [
-  { href: "/", label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/orders", label: "Orders", Icon: CalendarDays },
-  { href: "/recipe-calculator", label: "Recipes", Icon: ChefHat },
-  { href: "/reports", label: "Reports", Icon: BarChart3 },
-];
+const ICONS: Record<string, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  orders: CalendarDays,
+  recipe_calculator: ChefHat,
+  sales_reports: BarChart3,
+  users: Users,
+};
 
-export function BottomNav() {
+export type NavTab = { key: string; href: string; label: string };
+
+export function NavTabs({ tabs }: { tabs: NavTab[] }) {
   const pathname = usePathname();
 
   return (
@@ -20,8 +30,9 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-10 border-t border-separator bg-card/70 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150"
     >
       <ul className="mx-auto flex max-w-md">
-        {TABS.map(({ href, label, Icon }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        {tabs.map(({ key, href, label }) => {
+          const Icon = ICONS[key] ?? LayoutDashboard;
+          const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
           return (
             <li key={href} className="flex-1">
               <Link
@@ -34,7 +45,7 @@ export function BottomNav() {
                 <Icon
                   className="size-6"
                   strokeWidth={active ? 2.25 : 1.75}
-                  fill={active && href === "/" ? "currentColor" : "none"}
+                  fill={active && href === "/admin" ? "currentColor" : "none"}
                   aria-hidden
                 />
                 {label}

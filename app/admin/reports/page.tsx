@@ -1,10 +1,9 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 import { TriangleAlert } from "lucide-react";
 import { SheetsError } from "@/src/lib/google-sheets";
 import { fetchReportOrders } from "@/src/lib/reports-service";
 import { todayInManila, type ReportOrder } from "@/src/lib/sales-report";
-import { hasSession } from "@/src/lib/session";
+import { requireModule } from "@/src/lib/session";
 import { BottomNav } from "../_components/bottom-nav";
 import { RefreshButton } from "../_components/controls";
 import { PageHeader } from "../_components/page-header";
@@ -24,7 +23,7 @@ export default function ReportsPage() {
 }
 
 async function Content() {
-  if (!(await hasSession())) redirect("/login");
+  await requireModule("sales_reports");
 
   let orders: ReportOrder[];
   try {

@@ -1,9 +1,9 @@
-import { requireApiAuth } from "@/src/lib/api-auth";
+import { requireApiModule } from "@/src/lib/api-auth";
 import { SheetsError } from "@/src/lib/google-sheets";
 import { fetchOrders } from "@/src/lib/orders-service";
 
 export async function GET(request: Request) {
-  const denied = await requireApiAuth(request);
+  const denied = await requireApiModule(request, "orders");
   if (denied) return denied;
 
   try {
