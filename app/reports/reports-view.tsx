@@ -106,7 +106,7 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
         <div
           role="group"
           aria-label="Date range"
-          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="-mx-4 -my-1 flex gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {PRESETS.map((p) => (
             <button

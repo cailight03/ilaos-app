@@ -12,7 +12,9 @@ import { RECIPES, type Quantities, type RecipeId } from "@/src/lib/recipes";
 import { DatePicker } from "@/app/_components/date-picker";
 import { IngredientCard } from "@/app/_components/ingredient-card";
 import { QuantityInput } from "@/app/_components/quantity-input";
+import { totalStarterGrams } from "@/src/lib/starter-calc";
 import { loadQuantitiesFromOrders } from "./actions";
+import { StarterCalculator, type StarterRequest } from "./starter-calculator";
 
 type Notice = { kind: "error" | "success"; text: string } | null;
 
@@ -24,6 +26,13 @@ export function RecipeCalculator({ initialBakeDate }: { initialBakeDate: string 
 
   const cards = useMemo(() => buildRecipeCards(quantities), [quantities]);
   const total = totalPieces(quantities);
+  const [starterRequest, setStarterRequest] = useState<StarterRequest | null>(null);
+  const starterNeeded = useMemo(() => totalStarterGrams(cards), [cards]);
+
+  function calculateStarterBuild() {
+    setStarterRequest((r) => ({ grams: starterNeeded, nonce: (r?.nonce ?? 0) + 1 }));
+    document.getElementById("starter-calculator")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function setQuantity(id: RecipeId, value: number) {
     setQuantities((q) => ({ ...q, [id]: value }));
@@ -133,6 +142,17 @@ export function RecipeCalculator({ initialBakeDate }: { initialBakeDate: string 
       {cards.map((card) => (
         <IngredientCard key={card.id} card={card} />
       ))}
+
+      <button
+        type="button"
+        onClick={calculateStarterBuild}
+        disabled={starterNeeded <= 0}
+        className="flex h-12 items-center justify-center gap-2 rounded-xl bg-brand text-[17px] font-semibold text-white transition active:scale-[0.98] active:opacity-80 disabled:opacity-50 disabled:active:scale-100"
+      >
+        Calculate Starter Build
+      </button>
+
+      <StarterCalculator request={starterRequest} />
     </div>
   );
 }
