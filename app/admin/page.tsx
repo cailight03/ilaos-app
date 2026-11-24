@@ -16,7 +16,6 @@ import { parseOrders } from "@/src/lib/orders";
 import { requireModule } from "@/src/lib/session";
 import { ProfileCard } from "./_components/profile-card";
 import { BakeDateFilter, RefreshButton } from "./_components/controls";
-import { BottomNav } from "./_components/bottom-nav";
 import { ThemeToggle } from "./_components/theme-toggle";
 import { PageHeader } from "./_components/page-header";
 import { StatCard } from "./_components/stat-card";
@@ -41,7 +40,6 @@ export default function Home({ searchParams }: PageProps<"/admin">) {
           <Dashboard searchParams={searchParams} />
         </Suspense>
       </main>
-      <BottomNav />
     </>
   );
 }

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { BottomNav } from "../_components/bottom-nav";
 import { PageHeader } from "../_components/page-header";
 import { requireModule } from "@/src/lib/session";
 import { getSheetRows } from "@/src/lib/google-sheets";
@@ -15,7 +14,6 @@ export default function RecipeCalculatorPage({ searchParams }: PageProps<"/admin
           <Content searchParams={searchParams} />
         </Suspense>
       </main>
-      <BottomNav />
     </>
   );
 }

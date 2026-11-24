@@ -4,7 +4,6 @@ import { SheetsError } from "@/src/lib/google-sheets";
 import { fetchReportOrders } from "@/src/lib/reports-service";
 import { todayInManila, type ReportOrder } from "@/src/lib/sales-report";
 import { requireModule } from "@/src/lib/session";
-import { BottomNav } from "../_components/bottom-nav";
 import { RefreshButton } from "../_components/controls";
 import { PageHeader } from "../_components/page-header";
 import { ReportsView } from "./reports-view";
@@ -17,7 +16,6 @@ export default function ReportsPage() {
           <Content />
         </Suspense>
       </main>
-      <BottomNav />
     </>
   );
 }

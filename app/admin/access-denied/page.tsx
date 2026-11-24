@@ -6,7 +6,6 @@ import { canManageUsers } from "@/src/lib/authorization";
 import { MODULES, USER_MANAGEMENT_HREF } from "@/src/lib/modules";
 import { getAuthorizedUser } from "@/src/lib/session";
 import { logout } from "../login/actions";
-import { BottomNav } from "../_components/bottom-nav";
 
 export default function AccessDeniedPage() {
   return (
@@ -16,7 +15,6 @@ export default function AccessDeniedPage() {
           <Content />
         </Suspense>
       </main>
-      <BottomNav />
     </>
   );
 }

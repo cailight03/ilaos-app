@@ -3,7 +3,6 @@ import { TriangleAlert } from "lucide-react";
 import { MODULES } from "@/src/lib/modules";
 import { requireOwner } from "@/src/lib/session";
 import { listUsers } from "@/src/lib/users";
-import { BottomNav } from "../_components/bottom-nav";
 import { PageHeader } from "../_components/page-header";
 import { UsersManager, type UserRow } from "./users-manager";
 
@@ -15,7 +14,6 @@ export default function UsersPage() {
           <Content />
         </Suspense>
       </main>
-      <BottomNav />
     </>
   );
 }

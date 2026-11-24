@@ -23,6 +23,7 @@ export type NavTab = { key: string; href: string; label: string };
 
 export function NavTabs({ tabs }: { tabs: NavTab[] }) {
   const pathname = usePathname();
+  if (pathname === "/admin/login") return null;
 
   return (
     <nav
@@ -37,6 +38,7 @@ export function NavTabs({ tabs }: { tabs: NavTab[] }) {
             <li key={href} className="flex-1">
               <Link
                 href={href}
+                prefetch
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-[49px] flex-col items-center justify-center gap-0.5 pt-1 text-[10px] font-medium transition-[color,transform] duration-150 active:scale-95 ${
                   active ? "text-brand" : "text-label2"

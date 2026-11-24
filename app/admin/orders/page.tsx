@@ -4,7 +4,6 @@ import { fetchOrders } from "@/src/lib/orders-service";
 import { requireModule } from "@/src/lib/session";
 import type { Order } from "@/src/lib/orders";
 import { bakeDatesOf } from "@/src/lib/order-view";
-import { BottomNav } from "../_components/bottom-nav";
 import { OrdersView } from "./orders-view";
 
 export default function OrdersPage({ searchParams }: PageProps<"/admin/orders">) {
@@ -15,7 +14,6 @@ export default function OrdersPage({ searchParams }: PageProps<"/admin/orders">)
           <Content searchParams={searchParams} />
         </Suspense>
       </main>
-      <BottomNav />
     </>
   );
 }
