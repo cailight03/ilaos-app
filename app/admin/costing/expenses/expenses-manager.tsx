@@ -255,19 +255,22 @@ export function ExpensesManager({
   return (
     <div className="flex animate-ios-in flex-col gap-5">
       <section aria-label="Summary" className="flex flex-col gap-2 md:gap-3">
+        <details className="group text-[13px] text-label2">
+          <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+            <Info className="size-4 shrink-0" aria-hidden />
+            <span>How these totals work</span>
+          </summary>
+          <p className="mt-1.5 pl-6">
+            Materials (ingredients and packaging) are already counted in Product Costing, so they aren&apos;t deducted
+            again as operating expenses. Capital purchases such as equipment ({formatPeso(totals.capital)} {periodLabel}) are
+            tracked separately.
+          </p>
+        </details>
         <div className="grid grid-cols-3 gap-2 md:gap-3">
           <SummaryCard label="Total" value={totals.total} Icon={Wallet} />
           <SummaryCard label="Operating" value={totals.operating} Icon={Receipt} />
           <SummaryCard label="Materials" value={totals.material} Icon={ShoppingBasket} />
         </div>
-        <p className="flex items-start gap-2 text-[13px] text-label2">
-          <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <span>
-            Materials (ingredients and packaging) are already counted in Product Costing, so they aren&apos;t deducted
-            again as operating expenses. Capital purchases such as equipment ({formatPeso(totals.capital)} {periodLabel}) are
-            tracked separately.
-          </span>
-        </p>
       </section>
 
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
