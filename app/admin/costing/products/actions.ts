@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { UNITS, isUnit } from "@/src/lib/ingredient-cost";
+import { recordCostSnapshotSafely } from "@/src/lib/cost-history";
 import { PRODUCT_IDS, RECIPE_INGREDIENTS } from "@/src/lib/product-cost";
 import {
   DuplicateItemError,
@@ -84,14 +85,16 @@ export async function saveMappingAction(
   if (!Number.isFinite(d) || d <= 0 || d > 100) return { ok: false, error: "Density must be greater than zero." };
   return run(async (actor) => {
     await upsertMapping(recipeIngredient, ingredientId, Number(d.toFixed(4)), actor);
+    await recordCostSnapshotSafely(actor, "Ingredient mapping changed");
     return { action: "edit" };
   });
 }
 
 export async function clearMappingAction(recipeIngredient: string): Promise<ActionResult> {
   if (!RECIPE_INGREDIENTS.some((r) => r.key === recipeIngredient)) return { ok: false, error: "Unknown recipe ingredient." };
-  return run(async () => {
+  return run(async (actor) => {
     await deleteMapping(recipeIngredient);
+    await recordCostSnapshotSafely(actor, "Ingredient mapping removed");
     return { action: "delete" };
   });
 }
@@ -116,15 +119,17 @@ export async function saveCostItemAction(p: SaveCostItemPayload): Promise<Action
   return run(async (actor) => {
     if (p.id) await updateCostItem(p.id, input, actor);
     else await createCostItem(input, actor);
+    await recordCostSnapshotSafely(actor, "Packaging or add-on changed");
     return { action: p.id ? "edit" : "create" };
   });
 }
 
 export async function removeCostItemAction(id: string): Promise<ActionResult> {
   if (!UUID_RE.test(String(id))) return { ok: false, error: "Invalid item." };
-  return run(async () => {
+  return run(async (actor) => {
     const row = await deleteCostItem(id);
     if (!row) return;
+    await recordCostSnapshotSafely(actor, "Packaging or add-on removed");
     return { action: "delete" };
   });
 }

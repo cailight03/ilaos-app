@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, ArchiveRestore, Check, ChevronLeft, History, Pencil, Plus, Trash2, TriangleAlert } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronLeft, Pencil, Plus, Trash2, TriangleAlert } from "lucide-react";
 import {
   clearMappingAction,
   removeCostItemAction,
@@ -29,7 +29,6 @@ import {
   type Unit,
 } from "@/src/lib/ingredient-cost";
 import { ISSUE_LABEL, type CostLine, type ProductCost } from "@/src/lib/product-cost";
-import type { AuditEntry } from "@/src/lib/audit-log";
 
 export type IngredientOption = {
   id: string;
@@ -42,7 +41,6 @@ export type IngredientOption = {
 type MapDialog = { line: CostLine; ingredientId: string; density: string };
 type ItemDialog = { kind: "ingredient" | "packaging" | "addon"; id: string | null; ingredientId: string; quantity: string; unit: Unit };
 
-const dateTimeFmt = new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Manila" });
 
 const unitsFor = (base: BaseUnit): Unit[] => UNITS.filter((u) => baseUnitOf(u) === base);
 
@@ -50,12 +48,10 @@ export function ProductDetail({
   product,
   ingredients,
   categories,
-  activity,
 }: {
   product: ProductCost;
   ingredients: IngredientOption[];
   categories: Category[];
-  activity: AuditEntry[];
 }) {
   const router = useRouter();
   const [mapDialog, setMapDialog] = useState<MapDialog | null>(null);
@@ -420,20 +416,6 @@ const byId = useMemo(() => new Map(ingredients.map((i) => [i.id, i])), [ingredie
         {addonLines.length === 0 ? <Empty>No add-ons.</Empty> : renderLines(addonLines, "item")}
       </Section>
 
-      <Section title="Activity" icon={<History className="size-4" aria-hidden />}>
-        {activity.length === 0 ? (
-          <Empty>No changes recorded yet.</Empty>
-        ) : (
-          activity.map((a) => (
-            <li key={a.id} className="flex flex-col gap-0.5 px-4 py-3">
-              <p className="text-[15px]">{a.actor} · {a.action} · {a.module}</p>
-              <p className="text-[13px] text-label2">
-                {dateTimeFmt.format(new Date(a.createdAt))}
-              </p>
-            </li>
-          ))
-        )}
-      </Section>
       {mapDialog && (
         <SheetModal title="Map ingredient" dismissible={!pending} onClose={() => setMapDialog(null)}>
           <form

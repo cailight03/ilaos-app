@@ -25,7 +25,7 @@ export function BakeDateFilter({
         ...[...dates].reverse().map((d) => ({ value: d, label: formatDate(d) })),
       ]}
       disabled={pending}
-      onChange={(v) => start(() => router.push(`/?bakeDate=${v || "all"}`))}
+      onChange={(v) => start(() => router.push(`/admin?bakeDate=${v || "all"}`))}
       triggerClassName={`flex min-h-11 w-full items-center gap-3 rounded-xl border border-separator bg-card px-3.5 text-left shadow-sm transition active:bg-fill ${
         pending ? "opacity-60" : ""
       }`}

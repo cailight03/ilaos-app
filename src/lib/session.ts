@@ -8,6 +8,7 @@ import {
   authorizeEmail,
   canAccessModule,
   canManageUsers,
+  canViewAuditLog,
 } from "./authorization";
 import type { ModuleKey } from "./modules";
 import type { Role } from "./users";
@@ -68,6 +69,13 @@ export async function requireOwner(): Promise<SessionUser> {
   const user = await getAuthorizedUser();
   if (!user) redirect("/admin/login");
   if (!canManageUsers(user)) redirect("/admin/access-denied");
+  return user;
+}
+
+export async function requireAuditAccess(): Promise<SessionUser> {
+  const user = await getAuthorizedUser();
+  if (!user) redirect("/admin/login");
+  if (!canViewAuditLog(user)) redirect("/admin/access-denied");
   return user;
 }
 

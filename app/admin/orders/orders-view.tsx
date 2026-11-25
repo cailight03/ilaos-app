@@ -98,9 +98,14 @@ export function OrdersView({ initialOrders, initialSyncedAt, initialError, initi
   const duplicates = useMemo(() => new Set(duplicateInvoiceIds(orders)), [orders]);
   const shown = useMemo(() => filterAndSortOrders(orders, filters), [orders, filters]);
   const summary = useMemo(() => summarizeOrders(shown), [shown]);
+  const archivedCount = useMemo(() => orders.filter((o) => o.archived).length, [orders]);
 
   const isFiltered =
-    filters.query !== "" || filters.bakeDate !== "" || filters.product !== "" || filters.sort !== "newest";
+    filters.query !== "" ||
+    filters.bakeDate !== "" ||
+    filters.product !== "" ||
+    filters.sort !== "newest" ||
+    filters.showArchived;
 
   const dateOptions = [
     { value: "", label: "All dates" },
@@ -202,7 +207,15 @@ export function OrdersView({ initialOrders, initialSyncedAt, initialError, initi
             />
           </div>
         </div>
-        <div className="mt-1 flex justify-end px-1">
+        <div className="mt-1 flex items-center justify-between px-1">
+          <button
+            type="button"
+            aria-pressed={filters.showArchived}
+            onClick={() => update({ showArchived: !filters.showArchived })}
+            className="min-h-9 px-2 text-[15px] font-medium text-brand transition active:opacity-60"
+          >
+            {filters.showArchived ? "Hide archived" : `Show archived${archivedCount ? ` (${archivedCount})` : ""}`}
+          </button>
           <button
             type="button"
             disabled={!isFiltered}
@@ -246,6 +259,10 @@ export function OrdersView({ initialOrders, initialSyncedAt, initialError, initi
         onPaidChange={(rowNumber, paid) => {
           setOrders((list) => list.map((o) => (o.rowNumber === rowNumber ? { ...o, paid } : o)));
           setSelected((s) => (s && s.rowNumber === rowNumber ? { ...s, paid } : s));
+        }}
+        onPatch={(rowNumber, patch) => {
+          setOrders((list) => list.map((o) => (o.rowNumber === rowNumber ? { ...o, ...patch } : o)));
+          setSelected((s) => (s && s.rowNumber === rowNumber ? { ...s, ...patch } : s));
         }}
       />
     </div>

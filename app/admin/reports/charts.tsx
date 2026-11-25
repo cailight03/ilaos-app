@@ -6,14 +6,18 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
   LabelList,
+  Line,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import type { ProfitTrendPoint } from "@/src/lib/profitability";
 import { KNOWN_PRODUCTS, type ProductPerformance, type ProductSort, type TrendPoint } from "@/src/lib/sales-report";
 
 // Axis labels and grid lines follow the light/dark theme through Tailwind's token classes.
@@ -89,6 +93,70 @@ export function TrendChart({
           </BarChart>
         </ResponsiveContainer>
       </div>
+    </div>
+  );
+}
+
+export function ProfitTrendChart({
+  points,
+  onSelect,
+}: {
+  points: ProfitTrendPoint[];
+  onSelect: (key: string) => void;
+}) {
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scroller.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [points]);
+
+  // Unknown profit (no cost data) is left out of the line instead of being drawn as zero.
+  const data = points.map((p) => ({ ...p, profit: p.netOperatingProfit }));
+
+  return (
+    <div ref={scroller} className="-mx-1 overflow-x-auto overscroll-x-contain">
+      <div style={{ minWidth: points.length * BAR_SLOT * 1.6 + 48 }} className={THEME}>
+        <ResponsiveContainer width="100%" height={240} initialDimension={{ width: 320, height: 240 }}>
+          <ComposedChart
+            data={data}
+            margin={{ top: 8, right: 4, bottom: 0, left: 0 }}
+            onClick={(state) => {
+              const i = Number(state?.activeTooltipIndex);
+              if (Number.isInteger(i) && points[i]) onSelect(points[i].key);
+            }}
+          >
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="label" tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={8} fontSize={11} />
+            <YAxis width={48} tickLine={false} axisLine={false} tickFormatter={compactPeso} fontSize={11} />
+            <Tooltip content={() => null} cursor={{ className: "fill-fill" }} />
+            <ReferenceLine y={0} className="stroke-separator" />
+            <Bar dataKey="revenue" fill="#007aff" radius={[4, 4, 0, 0]} maxBarSize={14} isAnimationActive={false} />
+            <Bar dataKey="cogs" fill="#ff9500" radius={[4, 4, 0, 0]} maxBarSize={14} isAnimationActive={false} />
+            <Bar dataKey="operatingExpenses" fill="#af52de" radius={[4, 4, 0, 0]} maxBarSize={14} isAnimationActive={false} />
+            <Line
+              dataKey="profit"
+              stroke="#34c759"
+              strokeWidth={2}
+              dot={{ r: 3 }}
+              connectNulls={false}
+              isAnimationActive={false}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-1 text-[13px] text-label2">
+        {[
+          ["#007aff", "Revenue"],
+          ["#ff9500", "Cost of goods"],
+          ["#af52de", "Operating expenses"],
+          ["#34c759", "Net operating profit"],
+        ].map(([color, label]) => (
+          <li key={label} className="flex items-center gap-1.5">
+            <span aria-hidden className="size-2.5 rounded-full" style={{ backgroundColor: color }} />
+            {label}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

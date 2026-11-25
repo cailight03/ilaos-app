@@ -21,6 +21,7 @@ const order = (n: number, bakeDate: string | null, total: number, over: Partial<
   rowNumber: n,
   bakeDate,
   total,
+  refund: 0,
   items: [{ product: "Plain Sourdough", unitPrice: 250, quantity: 1 }],
   customerKey: null,
   ...over,

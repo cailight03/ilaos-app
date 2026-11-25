@@ -1,5 +1,6 @@
 import "server-only";
 import { PRODUCTS, type Order } from "./orders";
+import { netTotal, scopeOrders } from "./order-scope";
 
 export type DashboardStats = {
   bakeDate: string | null; // active filter (ISO) or null for all dates
@@ -8,16 +9,18 @@ export type DashboardStats = {
   totalSales: number;
   productBreakdown: Record<string, number>;
   warnings: {
-    duplicateInvoiceIds: string[]; // counted as-is; not removed
+    duplicateInvoiceIds: string[]; // same ID but different content; counted as separate orders
     unrecognizedProducts: string[];
     ordersWithoutBakeDate: number;
   };
 };
 
 export function computeDashboardStats(
-  allOrders: Order[],
+  rawOrders: Order[],
   bakeDate: string | null,
 ): DashboardStats {
+  // Archived orders and repeated rows are not sales (same rule as Reports and Profitability).
+  const { orders: allOrders, conflictingInvoiceIds } = scopeOrders(rawOrders);
   const availableBakeDates = [
     ...new Set(allOrders.map((o) => o.bakeDate).filter((d): d is string => !!d)),
   ].sort();
@@ -41,19 +44,14 @@ export function computeDashboardStats(
     }
   }
 
-  const idCounts = new Map<string, number>();
-  for (const o of orders) {
-    if (o.invoiceId) idCounts.set(o.invoiceId, (idCounts.get(o.invoiceId) ?? 0) + 1);
-  }
-
   return {
     bakeDate,
     availableBakeDates,
     totalOrders: orders.length,
-    totalSales: orders.reduce((sum, o) => sum + o.total, 0),
+    totalSales: orders.reduce((sum, o) => sum + netTotal(o), 0),
     productBreakdown,
     warnings: {
-      duplicateInvoiceIds: [...idCounts].filter(([, n]) => n > 1).map(([id]) => id),
+      duplicateInvoiceIds: conflictingInvoiceIds.filter((id) => orders.some((o) => o.invoiceId === id)),
       unrecognizedProducts: [...unrecognized],
       ordersWithoutBakeDate: orders.filter((o) => !o.bakeDate).length,
     },

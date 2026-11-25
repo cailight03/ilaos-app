@@ -1,4 +1,5 @@
 import type { Order } from "./orders.ts";
+import { netTotal, scopeOrders } from "./order-scope.ts";
 
 export type SortKey = "newest" | "oldest" | "name" | "highest" | "lowest";
 
@@ -7,6 +8,7 @@ export type OrderFilters = {
   bakeDate: string; // ISO yyyy-mm-dd, "" = all dates
   product: string; // sheet product name, "" = all products
   sort: SortKey;
+  showArchived: boolean;
 };
 
 export const DEFAULT_FILTERS: OrderFilters = {
@@ -14,6 +16,7 @@ export const DEFAULT_FILTERS: OrderFilters = {
   bakeDate: "",
   product: "",
   sort: "newest",
+  showArchived: false,
 };
 
 export const SORT_LABELS: Record<SortKey, string> = {
@@ -62,6 +65,7 @@ export function filterAndSortOrders(
   const q = filters.query.trim().toLowerCase();
 
   const result = orders.filter((o) => {
+    if (o.archived && !filters.showArchived) return false;
     if (filters.bakeDate && o.bakeDate !== filters.bakeDate) return false;
     if (filters.product && !o.items.some((i) => i.product === filters.product)) return false;
     if (q && !o.name.toLowerCase().includes(q) && !o.invoiceId.toLowerCase().includes(q)) {
@@ -83,10 +87,12 @@ export function filterAndSortOrders(
 }
 
 export function summarizeOrders(orders: readonly Order[]) {
+  // Same counting rule as the dashboard and reports: archived and repeated rows are not sales.
+  const { orders: counted } = scopeOrders(orders);
   return {
-    totalOrders: orders.length,
-    totalItems: orders.reduce((n, o) => n + orderItemCount(o), 0),
-    totalSales: orders.reduce((sum, o) => sum + o.total, 0),
+    totalOrders: counted.length,
+    totalItems: counted.reduce((n, o) => n + orderItemCount(o), 0),
+    totalSales: counted.reduce((sum, o) => sum + netTotal(o), 0),
   };
 }
 

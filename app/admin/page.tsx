@@ -1,27 +1,19 @@
 import { Suspense } from "react";
 import {
   BadgeDollarSign,
-  BarChart3,
-  ChefHat,
-  ClipboardList,
   Package,
   TriangleAlert,
-  Users,
 } from "lucide-react";
-import { canManageUsers } from "@/src/lib/authorization";
-import { USER_MANAGEMENT_HREF } from "@/src/lib/modules";
 import { computeDashboardStats } from "@/src/lib/dashboard";
 import { getSheetRows, SheetsError } from "@/src/lib/google-sheets";
 import { parseOrders } from "@/src/lib/orders";
 import { requireModule } from "@/src/lib/session";
-import { ProfileCard } from "./_components/profile-card";
 import { BakeDateFilter, RefreshButton } from "./_components/controls";
 import { ThemeToggle } from "./_components/theme-toggle";
 import { PageMain } from "./_components/page-main";
 import { PageHeader } from "./_components/page-header";
 import { StatCard } from "./_components/stat-card";
 import { ProductBreakdown } from "./_components/product-breakdown";
-import { ShortcutList } from "./_components/shortcut-list";
 import { DismissibleWarning } from "./_components/dismissible-warning";
 
 const peso = new Intl.NumberFormat("en-PH", {
@@ -48,7 +40,7 @@ export default function Home({ searchParams }: PageProps<"/admin">) {
 }
 
 async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["searchParams"] }) {
-  const user = await requireModule("dashboard");
+  await requireModule("dashboard");
 
   const { bakeDate: raw } = await searchParams;
   // ?bakeDate=all is "All dates"; no param at all defaults to the most recent bake date.
@@ -80,8 +72,6 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
     );
   }
 
-  const query = `?bakeDate=${stats.bakeDate ?? "all"}`;
-
   return (
     <div className="flex animate-ios-in flex-col gap-5 lg:grid lg:grid-cols-3 lg:items-start lg:gap-6">
       <div className="flex items-center gap-3 lg:col-span-3 lg:max-w-xl">
@@ -101,36 +91,12 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
 
         {stats.warnings.duplicateInvoiceIds.length > 0 && (
           <DismissibleWarning>
-            {stats.warnings.duplicateInvoiceIds.length} duplicate Invoice ID(s) found and counted as
-            separate orders: {stats.warnings.duplicateInvoiceIds.join(", ")}
+            {stats.warnings.duplicateInvoiceIds.length} Invoice ID(s) are shared by orders with
+            different details, so they were counted separately: {stats.warnings.duplicateInvoiceIds.join(", ")}
           </DismissibleWarning>
         )}
       </div>
 
-      <div className="flex flex-col gap-5">
-      <ShortcutList
-        items={[
-          { key: "orders", label: "View orders", Icon: ClipboardList, href: `/admin/orders${query}` },
-          {
-            key: "recipe_calculator",
-            label: "Recipe calculator",
-            Icon: ChefHat,
-            href: `/admin/recipe-calculator${query}`,
-          },
-          { key: "sales_reports", label: "Sales reports", Icon: BarChart3, href: "/admin/reports" },
-        ]
-          .filter((item) => user.modules.includes(item.key))
-          .concat(
-            canManageUsers(user)
-              ? [{ key: "users", label: "User management", Icon: Users, href: USER_MANAGEMENT_HREF }]
-              : [],
-          )}
-      />
-
-      <div className="lg:hidden">
-        <ProfileCard user={user} />
-      </div>
-      </div>
     </div>
   );
 }

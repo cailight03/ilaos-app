@@ -24,6 +24,11 @@ export function canManageUsers(user: Principal): boolean {
   return user.role === "owner";
 }
 
+/** The Audit Log is restricted to owners and admins. */
+export function canViewAuditLog(user: Principal): boolean {
+  return hasAllModules(user.role);
+}
+
 /** Module keys the principal may use (grants for unregistered modules are ignored). */
 export function accessibleModuleKeys(user: Principal): string[] {
   return hasAllModules(user.role) ? [...MODULE_KEYS] : MODULE_KEYS.filter((k) => user.modules.includes(k));

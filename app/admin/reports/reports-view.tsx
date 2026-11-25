@@ -35,6 +35,10 @@ import {
   type TrendGroup,
 } from "@/src/lib/sales-report";
 import { DatePicker } from "../_components/date-picker";
+import { Section, Segmented } from "./reports-ui";
+import { ProfitabilityPanel } from "./profit-panel";
+import type { ReportScope } from "@/src/lib/reports-service";
+import type { ProfitInputs } from "@/src/lib/profitability-service";
 import { PageHeader } from "../_components/page-header";
 import { RefreshButton } from "../_components/controls";
 import { StatCard } from "../_components/stat-card";
@@ -48,7 +52,20 @@ const pct = (n: number) => `${n.toFixed(1)}%`;
 const signedPct = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
 const nf = new Intl.NumberFormat("en-PH");
 
-export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: string }) {
+export function ReportsView({
+  orders,
+  scope,
+  profit,
+  profitError = false,
+  today,
+}: {
+  orders: ReportOrder[];
+  scope: ReportScope;
+  profit: ProfitInputs | null;
+  profitError?: boolean;
+  today: string;
+}) {
+  const [tab, setTab] = useState<"sales" | "profit">("sales");
   const [preset, setPreset] = useState<RangePreset>("month");
   const [custom, setCustom] = useState({ from: `${today.slice(0, 8)}01`, to: today });
   const [group, setGroup] = useState<TrendGroup>("day");
@@ -102,6 +119,18 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
         <RefreshButton />
       </PageHeader>
 
+      {(profit || profitError) && (
+        <Segmented
+          label="Report type"
+          value={tab}
+          options={[
+            { value: "sales", label: "Sales" },
+            { value: "profit", label: "Profitability" },
+          ]}
+          onChange={setTab}
+        />
+      )}
+
       <section aria-label="Date range" className="-mt-1 flex flex-col gap-3">
         <div
           role="group"
@@ -150,7 +179,14 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
         </p>
       </section>
 
-      {isEmpty ? (
+      {tab === "profit" && profitError ? (
+        <div role="alert" className="rounded-xl border border-separator bg-card p-4 text-[15px] text-red-600 shadow-sm">
+          Profitability data could not be loaded. Cost history or expenses may be unavailable; check that
+          supabase/profitability.sql has been run, then refresh.
+        </div>
+      ) : tab === "profit" && profit ? (
+        <ProfitabilityPanel profit={profit} preset={preset} custom={custom} today={today} scope={scope} />
+      ) : isEmpty ? (
         <div className="flex flex-col items-center gap-2 rounded-xl border border-separator bg-card px-6 py-12 text-center shadow-sm">
           <span className="flex size-12 items-center justify-center rounded-full bg-fill text-label2">
             <BarChart3 className="size-6" aria-hidden />
@@ -455,58 +491,6 @@ export function ReportsView({ orders, today }: { orders: ReportOrder[]; today: s
           </button>
         </>
       )}
-    </div>
-  );
-}
-
-function Section({
-  title,
-  aside,
-  className = "",
-  children,
-}: {
-  title: string;
-  className?: string;
-  aside?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section aria-label={title} className={className}>
-      <div className="mb-1.5 flex items-baseline justify-between px-4">
-        <h2 className="text-[13px] text-label2 uppercase">{title}</h2>
-        {aside}
-      </div>
-      <div className="overflow-hidden rounded-xl border border-separator bg-card shadow-sm">{children}</div>
-    </section>
-  );
-}
-
-function Segmented<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: { value: T; label: string }[];
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div role="group" aria-label={label} className="flex rounded-[9px] bg-fill p-0.5">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          aria-pressed={value === o.value}
-          onClick={() => onChange(o.value)}
-          className={`min-h-8 flex-1 rounded-[7px] px-2 text-[13px] font-medium transition ${
-            value === o.value ? "bg-card text-foreground shadow-sm" : "text-label2"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
     </div>
   );
 }

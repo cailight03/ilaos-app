@@ -30,6 +30,8 @@ export type Order = {
   total: number;
   coupon: string | null; // "Coupon used:" code, if any
   discount: number; // explicit "Discount:" amount (positive), 0 if none listed
+  archived: boolean; // "Order Status" column is "Archived": left out of every sales and profit figure
+  refund: number; // "Refund Amount" column, 0 if blank. Deducted from revenue.
   email?: string; // "Email for Invoice" column, if the sheet has one
   mobile?: string; // "Mobile Number" column, if the sheet has one
 };
@@ -49,6 +51,16 @@ type ColumnKey = keyof typeof COLUMN_HEADERS;
 export const PAYMENT_STATUS_HEADER = "Payment Status";
 export const PAID_VALUE = "Paid";
 export const UNPAID_VALUE = "Unpaid";
+
+export const ORDER_STATUS_HEADER = "Order Status";
+export const ARCHIVED_VALUE = "Archived";
+export const ACTIVE_VALUE = "Active";
+export const REFUND_HEADER = "Refund Amount";
+
+/** Index of an app-managed column matched by its exact header, or -1 if the sheet doesn't have it yet. */
+export function findExactColumn(header: string[] | undefined, name: string): number {
+  return (header ?? []).findIndex((h) => h?.trim().toLowerCase() === name.toLowerCase());
+}
 
 /** Index of the app-managed payment column, or -1 if the sheet doesn't have it yet. */
 export function findPaymentColumn(header: string[] | undefined): number {
@@ -90,6 +102,8 @@ export function parseOrders(rows: string[][]): Order[] {
   if (rows.length === 0) return [];
   const col = mapColumns(rows[0]);
   const paymentCol = findPaymentColumn(rows[0]);
+  const statusCol = findExactColumn(rows[0], ORDER_STATUS_HEADER);
+  const refundCol = findExactColumn(rows[0], REFUND_HEADER);
   const emailCol = findOptionalColumn(rows[0], "Email");
   const mobileCol = findOptionalColumn(rows[0], "Mobile");
   const orders: Order[] = [];
@@ -100,6 +114,10 @@ export function parseOrders(rows: string[][]): Order[] {
     // Skip blank rows
     if (!name && !productsRaw) return;
 
+    const total = parseMoney(row[col.total]);
+    // A refund can't be negative or exceed what the customer paid.
+    const refund = refundCol === -1 ? 0 : Math.min(Math.max(parseMoney(row[refundCol]), 0), Math.max(total, 0));
+
     orders.push({
       rowNumber: i + 2,
       name,
@@ -108,9 +126,11 @@ export function parseOrders(rows: string[][]): Order[] {
       paymentMethod: row[col.paymentMethod]?.trim() ?? "",
       paid: paymentCol !== -1 && row[paymentCol]?.trim().toLowerCase() === "paid",
       items: parseItems(productsRaw),
-      total: parseMoney(row[col.total]),
+      total,
       coupon: parseCoupon(productsRaw),
       discount: parseDiscount(productsRaw),
+      archived: statusCol !== -1 && row[statusCol]?.trim().toLowerCase() === ARCHIVED_VALUE.toLowerCase(),
+      refund,
       email: emailCol === -1 ? undefined : row[emailCol]?.trim(),
       mobile: mobileCol === -1 ? undefined : row[mobileCol]?.trim(),
     });

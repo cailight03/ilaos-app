@@ -2,9 +2,10 @@ import { Suspense } from "react";
 import { PageMain } from "../_components/page-main";
 import { TriangleAlert } from "lucide-react";
 import { SheetsError } from "@/src/lib/google-sheets";
-import { fetchReportOrders } from "@/src/lib/reports-service";
+import { fetchReportOrders, type ReportScope } from "@/src/lib/reports-service";
+import { loadProfitInputs, type ProfitInputs } from "@/src/lib/profitability-service";
 import { todayInManila, type ReportOrder } from "@/src/lib/sales-report";
-import { requireModule } from "@/src/lib/session";
+import { getUserForModule, requireModule } from "@/src/lib/session";
 import { RefreshButton } from "../_components/controls";
 import { PageHeader } from "../_components/page-header";
 import { ReportsView } from "./reports-view";
@@ -23,10 +24,12 @@ export default function ReportsPage() {
 
 async function Content() {
   await requireModule("sales_reports");
-
+  // Profit needs cost and expense data, so it also requires the Costing & Expenses module.
+  const costingUser = await getUserForModule("costing_expenses");
   let orders: ReportOrder[];
+  let scope: ReportScope;
   try {
-    orders = await fetchReportOrders();
+    ({ orders, scope } = await fetchReportOrders());
   } catch (err) {
     const message =
       err instanceof SheetsError ? err.message : "Something went wrong loading sales data.";
@@ -46,7 +49,26 @@ async function Content() {
     );
   }
 
-  return <ReportsView orders={orders} today={todayInManila()} />;
+  let profit: ProfitInputs | null = null;
+  let profitError = false;
+  if (costingUser) {
+    try {
+      profit = await loadProfitInputs(orders, costingUser.email);
+    } catch (err) {
+      console.error("[reports] profitability data failed", err);
+      profitError = true;
+    }
+  }
+
+  return (
+    <ReportsView
+      orders={orders}
+      scope={scope}
+      profit={profit}
+      profitError={profitError}
+      today={todayInManila()}
+    />
+  );
 }
 
 function ReportsSkeleton() {

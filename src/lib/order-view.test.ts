@@ -19,6 +19,8 @@ const order = (rowNumber: number, name: string, over: Partial<Order> = {}): Orde
   total: 250,
   coupon: null,
   discount: 0,
+  archived: false,
+  refund: 0,
   ...over,
 });
 

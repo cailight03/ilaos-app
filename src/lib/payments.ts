@@ -5,11 +5,17 @@ import {
   type SheetData,
 } from "./google-sheets";
 import {
+  ACTIVE_VALUE,
+  ARCHIVED_VALUE,
+  ORDER_STATUS_HEADER,
   PAID_VALUE,
   PAYMENT_STATUS_HEADER,
+  REFUND_HEADER,
   UNPAID_VALUE,
+  findExactColumn,
   findPaymentColumn,
   isOrderRow,
+  parseOrders,
 } from "./orders";
 
 /** 0 -> A, 25 -> Z, 26 -> AA */
@@ -83,3 +89,48 @@ export class StaleOrderError extends Error {
     super("This order changed in the sheet. Refresh and try again.");
   }
 }
+
+export class InvalidRefundError extends Error {}
+
+/** Adds an app-managed column (header only) after the last column if the sheet doesn't have it yet. */
+async function ensureColumn(sheet: SheetData, name: string): Promise<SheetData> {
+  const header = sheet.rows[0];
+  if (!header || findExactColumn(header, name) !== -1) return sheet;
+  const col = header.length;
+  await updateSheetCells([{ range: a1(sheet.sheetTitle, `${columnLetter(col)}1`), values: [[name]] }]);
+  const rows = sheet.rows.map((r) => [...r]);
+  rows[0][col] = name;
+  return { ...sheet, rows };
+}
+
+/** Writes one app-managed cell, after checking the row still belongs to that order. */
+async function writeOrderField(
+  rowNumber: number,
+  invoiceId: string,
+  column: string,
+  value: string,
+  validate?: (total: number) => void,
+): Promise<void> {
+  let sheet = await ensurePaymentColumn(await getSheetRows());
+  sheet = await ensureColumn(sheet, column);
+  const header = sheet.rows[0];
+  const row = sheet.rows[rowNumber - 1];
+  if (!header || !row || !isOrderRow(row, header)) throw new StaleOrderError();
+
+  const idCol = header.findIndex((h) => h?.trim().toLowerCase().startsWith("invoice id"));
+  if (idCol !== -1 && (row[idCol]?.trim() ?? "") !== invoiceId) throw new StaleOrderError();
+
+  if (validate) validate(parseOrders([header, row])[0]?.total ?? 0);
+
+  const letter = columnLetter(findExactColumn(header, column));
+  await updateSheetCells([{ range: a1(sheet.sheetTitle, `${letter}${rowNumber}`), values: [[value]] }]);
+}
+
+/** Archiving never deletes the row: it only marks it so it stops counting as a sale. */
+export const writeOrderArchived = (rowNumber: number, invoiceId: string, archived: boolean) =>
+  writeOrderField(rowNumber, invoiceId, ORDER_STATUS_HEADER, archived ? ARCHIVED_VALUE : ACTIVE_VALUE);
+
+export const writeOrderRefund = (rowNumber: number, invoiceId: string, refund: number) =>
+  writeOrderField(rowNumber, invoiceId, REFUND_HEADER, refund > 0 ? String(refund) : "", (total) => {
+    if (refund > total) throw new InvalidRefundError("A refund can't be more than the order total.");
+  });

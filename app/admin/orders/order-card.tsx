@@ -36,6 +36,14 @@ export function OrderCard({
           >
             {order.paid ? "Paid" : "Unpaid"}
           </span>
+          {order.archived && (
+            <span className="rounded-full bg-fill px-2.5 py-1 text-xs font-semibold text-label2">Archived</span>
+          )}
+          {order.refund > 0 && (
+            <span className="rounded-full bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-600">
+              Refunded {formatPeso(order.refund)}
+            </span>
+          )}
           {isDiscounted(order) && (
             <span className="rounded-full bg-brand-tint px-2.5 py-1 text-xs font-semibold text-brand">
               Discounted{order.coupon ? ` · ${order.coupon}` : ""}

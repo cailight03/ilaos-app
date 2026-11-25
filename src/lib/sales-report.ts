@@ -1,12 +1,14 @@
 import type { OrderItem } from "./order-parsing.ts";
 import type { ProductName } from "./orders.ts";
 import { productLabel } from "./order-view.ts";
+import { netTotal } from "./order-scope.ts";
 
 /** The slice of an order the report needs. `customerKey` is an opaque identifier, never a name. */
 export type ReportOrder = {
   rowNumber: number;
   bakeDate: string | null; // ISO yyyy-mm-dd
   total: number; // the order's recorded Total, counted once per order
+  refund: number; // refunded part of the Total (0 if none); sales are Total minus refund
   items: OrderItem[];
   customerKey: string | null;
 };
@@ -160,7 +162,6 @@ export function formatRange(range: DateRange): string {
 
 // ---------- Core metrics ----------
 
-const safe = (n: number) => (Number.isFinite(n) ? n : 0);
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
 /** Units across line items. Invalid quantities count as 0. */
@@ -177,8 +178,9 @@ export type SummaryMetrics = {
 };
 
 export function summarize(orders: readonly ReportOrder[]): SummaryMetrics {
-  // `total` is the order's own recorded amount. Line items are never added to it.
-  const totalSales = sum(orders.map((o) => safe(o.total)));
+  // `total` is the order's own recorded amount (already net of discount), less any refund.
+  // Line items are never added to it.
+  const totalSales = sum(orders.map((o) => netTotal(o)));
   const bakeDays = new Set(orders.map((o) => o.bakeDate).filter(Boolean)).size;
   return {
     totalSales,
@@ -208,7 +210,7 @@ export type TrendPoint = {
   change: number | null; // % vs the previous point; null if that point had no sales
 };
 
-function bucketKey(date: string, group: TrendGroup): string {
+export function bucketKey(date: string, group: TrendGroup): string {
   switch (group) {
     case "day":
       return date;
@@ -221,7 +223,7 @@ function bucketKey(date: string, group: TrendGroup): string {
   }
 }
 
-function nextBucketKey(key: string, group: TrendGroup): string {
+export function nextBucketKey(key: string, group: TrendGroup): string {
   switch (group) {
     case "day":
       return addDays(key, 1);
@@ -234,7 +236,7 @@ function nextBucketKey(key: string, group: TrendGroup): string {
   }
 }
 
-function bucketLabels(key: string, group: TrendGroup): { label: string; fullLabel: string } {
+export function bucketLabels(key: string, group: TrendGroup): { label: string; fullLabel: string } {
   switch (group) {
     case "day":
       return {
@@ -465,7 +467,7 @@ export type ReportOptions = {
   group: TrendGroup;
 };
 
-function resolveComparison(range: DateRange, previous: DateRange | null, today: string) {
+export function resolveComparison(range: DateRange, previous: DateRange | null, today: string) {
   if (!previous || !range.from || !range.to || !previous.from || !previous.to) return null;
   if (today < range.from) return null; // nothing has happened yet in this period
   // A week is one bake cycle and orders are placed ahead of bake day, so it is compared in full.
@@ -514,7 +516,7 @@ function csvCell(value: string | number | null): string {
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-const csvRow = (cells: (string | number | null)[]) => cells.map(csvCell).join(",");
+export const csvRow = (cells: (string | number | null)[]) => cells.map(csvCell).join(",");
 const money = (n: number) => n.toFixed(2);
 const pct = (n: number | null) => (n === null ? "" : n.toFixed(1));
 

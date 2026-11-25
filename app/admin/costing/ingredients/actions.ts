@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { logAudit } from "@/src/lib/audit-log";
 import { UNITS, isUnit } from "@/src/lib/ingredient-cost";
+import { recordCostSnapshotSafely } from "@/src/lib/cost-history";
 import {
   DuplicateNameError,
   NotFoundError,
@@ -85,6 +86,7 @@ export async function saveIngredientAction(payload: SaveIngredientPayload): Prom
   if (typeof input === "string") return { ok: false, error: input };
   return run(payload.id ? "edit" : "create", async (actor) => {
     await (payload.id ? updateIngredient(payload.id, input, actor) : createIngredient(input, actor));
+    await recordCostSnapshotSafely(actor, payload.id ? "Ingredient edited" : "Ingredient added");
     revalidatePath("/admin/costing/products");
   });
 }
@@ -94,6 +96,7 @@ export async function setIngredientActiveAction(id: string, active: boolean): Pr
   if (typeof active !== "boolean") return { ok: false, error: "Invalid request." };
   return run("edit", async (actor) => {
     await setIngredientActive(id, active, actor);
+    await recordCostSnapshotSafely(actor, active ? "Ingredient restored" : "Ingredient archived");
     revalidatePath("/admin/costing/products");
   });
 }

@@ -18,3 +18,6 @@ export const MODULE_KEYS: readonly string[] = MODULES.map((m) => m.key);
 
 /** User Management is not a grantable module: it is exclusive to owners. */
 export const USER_MANAGEMENT_HREF = "/admin/users";
+
+/** Audit Log is not a grantable module: it is limited to owners and admins. */
+export const AUDIT_LOG_HREF = "/admin/audit-log";

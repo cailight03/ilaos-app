@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { TriangleAlert } from "lucide-react";
 import { PageMain } from "../../../_components/page-main";
 import { requireModule } from "@/src/lib/session";
-import { listAudit } from "@/src/lib/audit-log";
 import { loadProductCosts } from "@/src/lib/product-costing";
 import { ProductDetail, type IngredientOption } from "./product-detail";
 
@@ -36,7 +35,7 @@ async function Content({ params }: { params: PageProps<"/admin/costing/products/
   }
   const product = loaded.products.find((p) => p.productId === productId);
   if (!product) notFound();
-  const data = { product, ingredients: loaded.ingredients, categories: loaded.categories, activity: await listAudit(20).catch(() => []) };
+  const data = { product, ingredients: loaded.ingredients, categories: loaded.categories };
   const options: IngredientOption[] = data.ingredients.map((i) => ({
     id: i.id,
     name: i.name,
@@ -50,7 +49,6 @@ async function Content({ params }: { params: PageProps<"/admin/costing/products/
       product={data.product}
       ingredients={options}
       categories={data.categories}
-      activity={data.activity}
     />;
 }
 

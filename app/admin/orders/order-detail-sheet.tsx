@@ -10,17 +10,19 @@ import {
   itemsSubtotal,
   productLabel,
 } from "@/src/lib/order-view";
-import { setOrderPaid } from "./actions";
+import { setOrderArchived, setOrderPaid, setOrderRefund } from "./actions";
 
 /** Bottom sheet built on the native <dialog>: focus trap, Esc to close and inert backdrop come for free. */
 export function OrderDetailSheet({
   order,
   onClose,
   onPaidChange,
+  onPatch,
 }: {
   order: Order | null;
   onClose: () => void;
   onPaidChange: (rowNumber: number, paid: boolean) => void;
+  onPatch: (rowNumber: number, patch: Partial<Pick<Order, "archived" | "refund">>) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -96,6 +98,7 @@ export function OrderDetailSheet({
           </div>
 
           <PaymentSection key={order.rowNumber} order={order} onPaidChange={onPaidChange} />
+          <AdjustmentSection key={`adj-${order.rowNumber}`} order={order} onPatch={onPatch} />
 
           <h3 className="mt-5 mb-1.5 px-4 text-[13px] text-label2">Products</h3>
           <ul className="overflow-hidden rounded-xl border border-separator bg-card">
@@ -149,6 +152,12 @@ export function OrderDetailSheet({
             <span className="text-[17px] font-semibold">Order total</span>
             <span className="text-[22px] font-bold tabular-nums">{formatPeso(order.total)}</span>
           </div>
+          {order.refund > 0 && (
+            <div className="mt-2 flex items-center justify-between rounded-xl border border-separator bg-card px-4 py-3 text-[17px]">
+              <span>Net after refund</span>
+              <span className="font-semibold tabular-nums">{formatPeso(order.total - order.refund)}</span>
+            </div>
+          )}
         </div>
       )}
     </dialog>
@@ -206,6 +215,86 @@ function PaymentSection({
           }`}
         >
           {pending ? "Saving…" : order.paid ? "Mark as unpaid" : "Mark as paid"}
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className="mt-2 text-[13px] text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Archive (stops the order counting as a sale) and refund. Both are written to the sheet; nothing is deleted. */
+function AdjustmentSection({
+  order,
+  onPatch,
+}: {
+  order: Order;
+  onPatch: (rowNumber: number, patch: Partial<Pick<Order, "archived" | "refund">>) => void;
+}) {
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [refund, setRefund] = useState(order.refund > 0 ? String(order.refund) : "");
+
+  function run(work: () => Promise<{ ok: true } | { ok: false; error: string }>, patch: Partial<Pick<Order, "archived" | "refund">>) {
+    setError(null);
+    start(async () => {
+      try {
+        const res = await work();
+        if (res.ok) onPatch(order.rowNumber, patch);
+        else setError(res.error);
+      } catch {
+        setError("Couldn't save. Check your connection and try again.");
+      }
+    });
+  }
+
+  const amount = refund.trim() === "" ? 0 : Number(refund);
+  const validRefund = Number.isFinite(amount) && amount >= 0 && amount <= order.total;
+  const changed = amount !== order.refund;
+
+  return (
+    <div className="mt-4 rounded-xl border border-separator bg-card p-4">
+      <p className="text-[13px] text-label2">Refund</p>
+      <div className="mt-1.5 flex items-center gap-2">
+        <input
+          type="text"
+          inputMode="decimal"
+          value={refund}
+          onChange={(e) => setRefund(e.target.value.replace(/[^\d.]/g, ""))}
+          placeholder="0.00"
+          aria-label="Refund amount in pesos"
+          disabled={order.archived}
+          className="h-11 min-w-0 flex-1 rounded-[10px] bg-fill px-3 text-[17px] tabular-nums outline-none placeholder:text-label2 focus-visible:ring-2 focus-visible:ring-brand/40 disabled:opacity-60"
+        />
+        <button
+          type="button"
+          disabled={pending || order.archived || !changed || !validRefund}
+          onClick={() => run(() => setOrderRefund(order.rowNumber, order.invoiceId, amount), { refund: amount })}
+          className="h-11 rounded-xl bg-brand px-4 text-[15px] font-semibold text-white transition active:scale-[0.97] active:opacity-80 disabled:opacity-40"
+        >
+          Save
+        </button>
+      </div>
+      {!validRefund && <p className="mt-1.5 text-[13px] text-red-600">A refund can&apos;t be more than the order total.</p>}
+
+      <div className="mt-4 border-t border-separator pt-4">
+        <p className="text-[13px] text-label2">
+          {order.archived
+            ? "This order is archived. It is not counted in sales, the dashboard or profit reports."
+            : "Archive a cancelled or mistaken order so it stops counting as a sale. It stays in the sheet."}
+        </p>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => run(() => setOrderArchived(order.rowNumber, order.invoiceId, !order.archived), { archived: !order.archived })}
+          className={`mt-2 h-11 w-full rounded-xl px-4 text-[15px] font-semibold transition active:scale-[0.98] active:opacity-80 disabled:opacity-60 ${
+            order.archived ? "bg-brand text-white" : "bg-fill text-red-600"
+          }`}
+        >
+          {pending ? "Saving…" : order.archived ? "Restore order" : "Archive order"}
         </button>
       </div>
       {error && (

@@ -44,7 +44,10 @@ export function OrdersTable({
               }}
               className="cursor-pointer border-b border-separator transition-colors last:border-b-0 hover:bg-fill focus-visible:bg-fill focus-visible:outline-none"
             >
-              <td className="max-w-56 truncate px-4 py-3 font-medium">{o.name}</td>
+              <td className="max-w-56 truncate px-4 py-3 font-medium">
+                {o.name}
+                {o.archived && <span className="ml-1.5 text-[13px] font-normal text-label2">(archived)</span>}
+              </td>
               <td className="px-4 py-3 text-label2 tabular-nums">
                 {o.invoiceId ? displayOrderId(o) : "—"}
                 {duplicates.has(o.invoiceId) && (
@@ -66,6 +69,9 @@ export function OrdersTable({
               </td>
               <td className="px-4 py-3 text-right font-semibold tabular-nums">
                 {formatPeso(o.total)}
+                {o.refund > 0 && (
+                  <span className="block text-[13px] font-normal text-red-600">refunded {formatPeso(o.refund)}</span>
+                )}
                 {o.discount > 0 && (
                   <span className="block text-[13px] font-normal text-label2">saved {formatPeso(o.discount)}</span>
                 )}
