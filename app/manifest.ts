@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Ilao's Microbakery",
     short_name: "Ilao's",
     description: "Bakery management dashboard",
-    start_url: "/",
+    start_url: "/admin",
     display: "standalone",
     background_color: "#fafaf9",
     theme_color: "#b45309",
