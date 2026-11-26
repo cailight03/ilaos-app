@@ -9,16 +9,6 @@ import {
 
 export type { OrderItem };
 
-export const PRODUCTS = [
-  "Plain Sourdough",
-  "Jalapeno Cheddar",
-  "Wheat Multi-seed",
-  "Rosemary Focaccia",
-  "Tomato Pesto Focaccia",
-] as const;
-
-export type ProductName = (typeof PRODUCTS)[number];
-
 export type Order = {
   rowNumber: number; // 1-based sheet row, for tracing back to the sheet
   name: string;

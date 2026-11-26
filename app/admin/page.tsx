@@ -7,6 +7,7 @@ import {
 import { computeDashboardStats } from "@/src/lib/dashboard";
 import { getSheetRows, SheetsError } from "@/src/lib/google-sheets";
 import { parseOrders } from "@/src/lib/orders";
+import { loadProductRefs } from "@/src/lib/recipes-db";
 import { requireModule } from "@/src/lib/session";
 import { BakeDateFilter, RefreshButton } from "./_components/controls";
 import { ThemeToggle } from "./_components/theme-toggle";
@@ -49,12 +50,13 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
 
   let stats;
   try {
-    const { rows } = await getSheetRows();
+    const [{ rows }, refs] = await Promise.all([getSheetRows(), loadProductRefs()]);
+    const products = refs.filter((r) => r.active).map((r) => r.key);
     const orders = parseOrders(rows);
-    stats = computeDashboardStats(orders, requested);
+    stats = computeDashboardStats(orders, requested, products);
     if (!requested && !isAll) {
       const latest = stats.availableBakeDates.at(-1) ?? null;
-      if (latest) stats = computeDashboardStats(orders, latest);
+      if (latest) stats = computeDashboardStats(orders, latest, products);
     }
   } catch (err) {
     const message =

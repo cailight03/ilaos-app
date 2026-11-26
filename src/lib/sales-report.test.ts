@@ -16,6 +16,7 @@ import {
   todayInManila,
   type ReportOrder,
 } from "./sales-report.ts";
+import { setProductRegistry } from "./product-registry.ts";
 
 const order = (n: number, bakeDate: string | null, total: number, over: Partial<ReportOrder> = {}): ReportOrder => ({
   rowNumber: n,
@@ -147,6 +148,11 @@ test("a week is compared in full against the previous week", () => {
 });
 
 test("product performance uses recorded prices and lists every known product", () => {
+  setProductRegistry(
+    ["Plain Sourdough", "Jalapeno Cheddar", "Wheat Multi-seed", "Rosemary Focaccia", "Tomato Pesto Focaccia"].map(
+      (key) => ({ key, label: key, active: true }),
+    ),
+  );
   const rows = buildProductPerformance([
     order(1, "2025-09-06", 230, { items: [{ product: "Plain Sourdough", unitPrice: 230, quantity: 1 }] }),
     order(2, "2026-11-22", 500, { items: [{ product: "Plain Sourdough", unitPrice: 250, quantity: 2 }] }),

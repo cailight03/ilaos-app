@@ -2,6 +2,7 @@ import { requireApiModule } from "@/src/lib/api-auth";
 import { computeDashboardStats } from "@/src/lib/dashboard";
 import { getSheetRows, SheetsError } from "@/src/lib/google-sheets";
 import { parseOrders } from "@/src/lib/orders";
+import { loadProductRefs } from "@/src/lib/recipes-db";
 
 export async function GET(request: Request) {
   const denied = await requireApiModule(request, "dashboard");
@@ -16,8 +17,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { rows } = await getSheetRows();
-    const stats = computeDashboardStats(parseOrders(rows), bakeDate);
+    const [{ rows }, refs] = await Promise.all([getSheetRows(), loadProductRefs()]);
+    const stats = computeDashboardStats(
+      parseOrders(rows),
+      bakeDate,
+      refs.filter((r) => r.active).map((r) => r.key),
+    );
     return Response.json(stats, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     if (err instanceof SheetsError) {

@@ -1,4 +1,4 @@
-import { RECIPES, type Recipe } from "./recipes.ts";
+import type { Recipe } from "./recipes.ts";
 import { baseUnitOf, toBaseQuantity, type BaseUnit, type Unit } from "./ingredient-cost.ts";
 
 /** Starter is built from flour and water at 70% hydration: per 1 g of starter, 1/1.7 g flour + 0.7/1.7 g water. */
@@ -82,21 +82,18 @@ export type ProductCost = {
 
 export const normalizeKey = (name: string) => name.trim().toLowerCase();
 
-const isStarter = (name: string) => normalizeKey(name) === "starter";
+export const isStarter = (name: string) => normalizeKey(name) === "starter";
 
 /** Mappable recipe ingredients (everything but Starter, which is derived), keyed by normalized name. */
-export const RECIPE_INGREDIENTS: { key: string; label: string }[] = (() => {
+export function mappableIngredients(recipes: readonly Recipe[]): { key: string; label: string }[] {
   const seen = new Map<string, string>();
-  for (const r of RECIPES as readonly Recipe[]) {
+  for (const r of recipes) {
     for (const i of r.ingredients) {
       if (!isStarter(i.name) && !seen.has(normalizeKey(i.name))) seen.set(normalizeKey(i.name), i.name);
     }
   }
   return [...seen].map(([key, label]) => ({ key, label }));
-})();
-
-export const PRODUCT_IDS: readonly string[] = RECIPES.map((r) => r.id);
-
+}
 type Context = {
   mappings: ReadonlyMap<string, Mapping>;
   ingredients: ReadonlyMap<string, LibraryIngredient>;
@@ -297,13 +294,14 @@ export function computeCustomProductCost(
 }
 
 export function computeAllProducts(data: {
+  recipes: readonly Recipe[];
   mappings: readonly Mapping[];
   ingredients: readonly LibraryIngredient[];
   items: readonly CostItem[];
   prices: ReadonlyMap<string, number>;
   customProducts?: readonly CustomProduct[];
 }): ProductCost[] {
-  const recipes = (RECIPES as readonly Recipe[]).map((r) =>
+  const recipes = data.recipes.map((r) =>
     computeProductCost(r, { ...data, sellingPrice: data.prices.get(r.id) ?? null }),
   );
   const custom = (data.customProducts ?? []).map((p) =>

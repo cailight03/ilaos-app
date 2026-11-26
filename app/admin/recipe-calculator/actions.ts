@@ -4,6 +4,7 @@ import { aggregateQuantities } from "@/src/lib/recipe-calc";
 import type { Quantities } from "@/src/lib/recipes";
 import { getSheetRows, SheetsError } from "@/src/lib/google-sheets";
 import { parseOrders } from "@/src/lib/orders";
+import { loadRecipes } from "@/src/lib/recipes-db";
 import { getUserForModule } from "@/src/lib/session";
 
 export type LoadResult =
@@ -19,11 +20,11 @@ export async function loadQuantitiesFromOrders(bakeDate: string): Promise<LoadRe
   }
 
   try {
-    const { rows } = await getSheetRows();
+    const [{ rows }, recipes] = await Promise.all([getSheetRows(), loadRecipes({ activeOnly: true })]);
     const orders = parseOrders(rows).filter((o) => o.bakeDate === bakeDate);
     return {
       ok: true,
-      quantities: aggregateQuantities(orders, bakeDate),
+      quantities: aggregateQuantities(recipes, orders, bakeDate),
       orderCount: orders.length,
     };
   } catch (err) {

@@ -1,10 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { after } from "next/server";
 import { UNITS, isUnit } from "@/src/lib/ingredient-cost";
 import { recordCostSnapshotSafely } from "@/src/lib/cost-history";
-import { PRODUCT_IDS, RECIPE_INGREDIENTS } from "@/src/lib/product-cost";
 import {
   DuplicateItemError,
   ItemNotFoundError,
@@ -14,6 +13,8 @@ import {
   customProductExists,
   deleteCostItem,
   deleteMapping,
+  isMappableRecipeIngredient,
+  recipeProductExists,
   setProductPrice,
   setRecipeProductCategory,
 
@@ -25,6 +26,7 @@ import {
 import { DuplicateNameError, NotFoundError } from "@/src/lib/ingredients";
 import { logAudit } from "@/src/lib/audit-log";
 import { getUserForModule } from "@/src/lib/session";
+import { STOREFRONT_TAG } from "@/src/lib/store/catalog";
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -51,6 +53,7 @@ async function run(work: (actor: string) => Promise<Note | void>): Promise<Actio
   try {
     const note = await work(user.email);
     revalidatePath("/admin/costing", "layout");
+    updateTag(STOREFRONT_TAG);
     if (note) after(() => logAudit(user.email, note.action, "Costing"));
     return { ok: true, id: note?.id };
   } catch (err) {
@@ -67,9 +70,9 @@ async function run(work: (actor: string) => Promise<Note | void>): Promise<Actio
   }
 }
 
-/** Recipe products live in code; custom products live in the database. */
+/** Recipe products and custom products are both rows of products; custom ones are keyed by their own id. */
 async function productKind(id: string): Promise<"recipe" | "custom" | null> {
-  if (PRODUCT_IDS.includes(id)) return "recipe";
+  if (await recipeProductExists(id)) return "recipe";
   if (UUID_RE.test(id) && (await customProductExists(id))) return "custom";
   return null;
 }
@@ -79,7 +82,7 @@ export async function saveMappingAction(
   ingredientId: string,
   density: number,
 ): Promise<ActionResult> {
-  if (!RECIPE_INGREDIENTS.some((r) => r.key === recipeIngredient)) return { ok: false, error: "Unknown recipe ingredient." };
+  if (!(await isMappableRecipeIngredient(recipeIngredient))) return { ok: false, error: "Unknown recipe ingredient." };
   if (!UUID_RE.test(String(ingredientId))) return { ok: false, error: "Choose an ingredient." };
   const d = Number(density);
   if (!Number.isFinite(d) || d <= 0 || d > 100) return { ok: false, error: "Density must be greater than zero." };
@@ -91,7 +94,7 @@ export async function saveMappingAction(
 }
 
 export async function clearMappingAction(recipeIngredient: string): Promise<ActionResult> {
-  if (!RECIPE_INGREDIENTS.some((r) => r.key === recipeIngredient)) return { ok: false, error: "Unknown recipe ingredient." };
+  if (!(await isMappableRecipeIngredient(recipeIngredient))) return { ok: false, error: "Unknown recipe ingredient." };
   return run(async (actor) => {
     await deleteMapping(recipeIngredient);
     await recordCostSnapshotSafely(actor, "Ingredient mapping removed");
@@ -142,8 +145,8 @@ export async function setProductPriceAction(productId: string, price: number | n
     if (price > MAX_AMOUNT) return { ok: false, error: "That number is too large." };
   }
   const value = price === null ? null : Number(price.toFixed(4));
-  return run(async (actor) => {
-    await setProductPrice(productId, value, actor);
+  return run(async () => {
+    await setProductPrice(productId, value);
     return { action: "edit" };
   });
 }
@@ -155,11 +158,11 @@ export type SaveProductPayload = { id: string | null; name: string; categoryId: 
 /** Creates a custom product, or edits one. Recipe products only take a category. Returns the product id. */
 export async function saveProductAction(p: SaveProductPayload): Promise<ActionResult> {
   if (!UUID_RE.test(String(p.categoryId))) return { ok: false, error: "Choose a category." };
-  const isRecipe = p.id !== null && PRODUCT_IDS.includes(p.id);
+  const isRecipe = p.id !== null && (await recipeProductExists(p.id));
   if (isRecipe) {
     const id = p.id as string;
-    return run(async (actor) => {
-      await setRecipeProductCategory(id, p.categoryId, actor);
+    return run(async () => {
+      await setRecipeProductCategory(id, p.categoryId);
       return { action: "edit", id };
     });
   }

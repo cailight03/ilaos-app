@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { PageMain } from "../_components/page-main";
 import { PageHeader } from "../_components/page-header";
 import { requireModule } from "@/src/lib/session";
 import { getSheetRows } from "@/src/lib/google-sheets";
 import { parseOrders } from "@/src/lib/orders";
+import { loadRecipes } from "@/src/lib/recipes-db";
 import { RecipeCalculator } from "./recipe-calculator";
 
 export default function RecipeCalculatorPage({ searchParams }: PageProps<"/admin/recipe-calculator">) {
@@ -41,7 +43,15 @@ async function Content({
       // Leave the date empty; the user can still pick one.
     }
   }
-  return <RecipeCalculator initialBakeDate={initial} />;
+  const recipes = await loadRecipes({ activeOnly: true });
+  return (
+    <>
+      <Link href="/admin/recipe-calculator/edit" className="self-start text-[15px] text-brand">
+        Edit recipes
+      </Link>
+      <RecipeCalculator recipes={recipes} initialBakeDate={initial} />
+    </>
+  );
 }
 
 function RecipeSkeleton() {

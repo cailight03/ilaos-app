@@ -18,7 +18,8 @@ import {
   YAxis,
 } from "recharts";
 import type { ProfitTrendPoint } from "@/src/lib/profitability";
-import { KNOWN_PRODUCTS, type ProductPerformance, type ProductSort, type TrendPoint } from "@/src/lib/sales-report";
+import { knownProducts } from "@/src/lib/product-registry";
+import type { ProductPerformance, ProductSort, TrendPoint } from "@/src/lib/sales-report";
 
 // Axis labels and grid lines follow the light/dark theme through Tailwind's token classes.
 const THEME =
@@ -28,8 +29,8 @@ const PRODUCT_COLORS = ["#007aff", "#ff9500", "#34c759", "#af52de", "#ff2d55"];
 const OTHER_COLOR = "#8e8e93";
 
 export const productColor = (product: string) => {
-  const i = (KNOWN_PRODUCTS as readonly string[]).indexOf(product);
-  return i === -1 ? OTHER_COLOR : PRODUCT_COLORS[i];
+  const i = knownProducts().indexOf(product);
+  return i === -1 ? OTHER_COLOR : PRODUCT_COLORS[i % PRODUCT_COLORS.length];
 };
 
 export function compactPeso(n: number): string {

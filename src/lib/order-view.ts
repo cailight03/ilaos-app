@@ -27,12 +27,9 @@ export const SORT_LABELS: Record<SortKey, string> = {
   lowest: "Lowest amount",
 };
 
-const DISPLAY_NAMES: Record<string, string> = {
-  "Jalapeno Cheddar": "Jalapeño Cheddar",
-  "Wheat Multi-seed": "Wheat Multiseed",
-};
+import { productLabel } from "./product-registry.ts";
 
-export const productLabel = (name: string) => DISPLAY_NAMES[name] ?? name;
+export { productLabel };
 
 export const orderItemCount = (o: Order) => o.items.reduce((n, i) => n + i.quantity, 0);
 

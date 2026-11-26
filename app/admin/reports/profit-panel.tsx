@@ -77,6 +77,7 @@ function MetricCard({
   label,
   value,
   negative,
+  positive,
   change,
   unit = "pct",
   goodWhenUp = true,
@@ -85,6 +86,7 @@ function MetricCard({
   label: string;
   value: string;
   negative?: boolean;
+  positive?: boolean;
   change: Change | null;
   unit?: "pct" | "pts";
   goodWhenUp?: boolean;
@@ -96,8 +98,8 @@ function MetricCard({
         <p className="text-[15px] text-label2">{label}</p>
         {badge}
       </div>
-      <p className={`mt-1.5 text-[26px] leading-8 font-bold tracking-tight tabular-nums ${negative ? "text-red-600" : ""}`}>
-        {value}
+      <p className={`mt-1.5 text-[26px] leading-8 font-bold tracking-tight tabular-nums       ${negative ? "text-red-600" : positive ? "text-green-600" : ""}`}>
+        {positive ? `+${value}` : value}
       </p>
       <div className="mt-1">
         <ChangeNote change={change} unit={unit} goodWhenUp={goodWhenUp} />
@@ -200,6 +202,7 @@ export function ProfitabilityPanel({
           label="Net operating profit"
           value={peso(m.netOperatingProfit)}
           negative={(m.netOperatingProfit ?? 0) < 0}
+          positive={(m.netOperatingProfit ?? 0) > 0}
           change={prev ? changeOf(cur.netOperatingProfit, prev.netOperatingProfit) : null}
           badge={<Loss value={m.netOperatingProfit} />}
         />
@@ -333,9 +336,12 @@ function Notices({ report, hasCostHistory, scope }: { report: ProfitReport; hasC
           </p>
         </div>
       )}
-      <div className="flex items-start gap-2 rounded-xl bg-fill p-3 text-[13px] text-label2">
-        <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-        <p>
+      <details className="rounded-xl bg-fill p-3 text-[13px] text-label2">
+        <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+          <Info className="size-4 shrink-0" aria-hidden />
+          <span>How profit is calculated</span>
+        </summary>
+        <p className="mt-1.5 pl-6">
           {PROFIT_NOTE} Water is counted in ingredient cost and as a utility expense, so both are kept.
           {(scope.archived > 0 || scope.duplicatesRemoved > 0) &&
             ` Left out of every figure: ${[
@@ -347,7 +353,7 @@ function Notices({ report, hasCostHistory, scope }: { report: ProfitReport; hasC
           {scope.conflictingInvoices > 0 &&
             ` ${scope.conflictingInvoices} invoice ID${scope.conflictingInvoices === 1 ? " is" : "s are"} shared by different orders; all were counted.`}
         </p>
-      </div>
+      </details>
     </div>
   );
 }

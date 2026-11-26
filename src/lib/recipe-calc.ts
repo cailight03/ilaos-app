@@ -1,9 +1,9 @@
-import { RECIPES, type Ingredient, type Quantities, type Recipe } from "./recipes.ts";
+import type { Ingredient, Quantities, Recipe } from "./recipes.ts";
 
 export const MAX_QUANTITY = 999;
 
-export function emptyQuantities(): Quantities {
-  return Object.fromEntries(RECIPES.map((r) => [r.id, 0])) as Quantities;
+export function emptyQuantities(recipes: readonly Recipe[]): Quantities {
+  return Object.fromEntries(recipes.map((r) => [r.id, 0]));
 }
 
 /** Coerces any input to a whole number in [0, MAX_QUANTITY]. Invalid values become 0. */
@@ -37,11 +37,11 @@ export type RecipeCard = {
  * One card per recipe with quantity > 0, in recipe order. Products that share a dough
  * (same `group`) are combined into one card; everything else stays separate.
  */
-export function buildRecipeCards(quantities: Partial<Quantities>): RecipeCard[] {
+export function buildRecipeCards(recipes: readonly Recipe[], quantities: Partial<Quantities>): RecipeCard[] {
   const cards = new Map<string, RecipeCard & { base: readonly Ingredient[] }>();
 
-  for (const recipe of RECIPES as readonly Recipe[]) {
-    const pieces = sanitizeQuantity(quantities[recipe.id as keyof Quantities]);
+  for (const recipe of recipes) {
+    const pieces = sanitizeQuantity(quantities[recipe.id]);
     if (pieces === 0) continue;
 
     const id = recipe.group?.id ?? recipe.id;
@@ -71,8 +71,8 @@ export function buildRecipeCards(quantities: Partial<Quantities>): RecipeCard[] 
   }));
 }
 
-export function totalPieces(quantities: Partial<Quantities>): number {
-  return RECIPES.reduce((sum, r) => sum + sanitizeQuantity(quantities[r.id]), 0);
+export function totalPieces(recipes: readonly Recipe[], quantities: Partial<Quantities>): number {
+  return recipes.reduce((sum, r) => sum + sanitizeQuantity(quantities[r.id]), 0);
 }
 
 type OrderLike = {
@@ -82,15 +82,16 @@ type OrderLike = {
 
 /** Sums ordered quantities per known product for one bake date (ISO yyyy-mm-dd). */
 export function aggregateQuantities(
+  recipes: readonly Recipe[],
   orders: readonly OrderLike[],
   bakeDate: string,
 ): Quantities {
-  const result = emptyQuantities();
+  const result = emptyQuantities(recipes);
   for (const order of orders) {
     if (order.bakeDate !== bakeDate) continue;
     for (const item of order.items) {
-      if (item.product in result) {
-        result[item.product as keyof Quantities] += Math.max(0, Math.trunc(item.quantity));
+      if (Object.hasOwn(result, item.product)) {
+        result[item.product] += Math.max(0, Math.trunc(item.quantity));
       }
     }
   }

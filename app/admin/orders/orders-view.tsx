@@ -17,7 +17,7 @@ import {
   type OrderFilters,
   type SortKey,
 } from "@/src/lib/order-view";
-import { RECIPES } from "@/src/lib/recipes";
+import { knownProducts } from "@/src/lib/product-registry";
 import { PageHeader } from "../_components/page-header";
 import { SelectRow } from "../_components/select-row";
 import { OrderCard } from "./order-card";
@@ -113,7 +113,7 @@ export function OrdersView({ initialOrders, initialSyncedAt, initialError, initi
   ];
   const productOptions = [
     { value: "", label: "All products" },
-    ...RECIPES.map((r) => ({ value: r.id as string, label: productLabel(r.id) })),
+    ...knownProducts().map((k) => ({ value: k, label: productLabel(k) })),
   ];
   const sortOptions = (Object.keys(SORT_LABELS) as SortKey[]).map((k) => ({
     value: k,

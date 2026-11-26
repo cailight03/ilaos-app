@@ -1,5 +1,5 @@
 import type { OrderItem } from "./order-parsing.ts";
-import type { ProductName } from "./orders.ts";
+import { knownProducts } from "./product-registry.ts";
 import { productLabel } from "./order-view.ts";
 import { netTotal } from "./order-scope.ts";
 
@@ -35,15 +35,6 @@ export const GROUP_LABELS: Record<TrendGroup, string> = {
   month: "Month",
   year: "Year",
 };
-
-// Always listed in product performance, even with no sales. Matches PRODUCTS in orders.ts.
-export const KNOWN_PRODUCTS = [
-  "Plain Sourdough",
-  "Jalapeno Cheddar",
-  "Wheat Multi-seed",
-  "Rosemary Focaccia",
-  "Tomato Pesto Focaccia",
-] as const satisfies readonly ProductName[];
 
 /** Customer insights are only shown when most orders in range carry a usable identifier. */
 export const MIN_IDENTIFIED_SHARE = 0.8;
@@ -311,7 +302,7 @@ export type ProductPerformance = {
  */
 export function buildProductPerformance(orders: readonly ReportOrder[]): ProductPerformance[] {
   const acc = new Map<string, { quantity: number; revenue: number }>(
-    KNOWN_PRODUCTS.map((p) => [p, { quantity: 0, revenue: 0 }]),
+    knownProducts().map((p) => [p, { quantity: 0, revenue: 0 }]),
   );
 
   for (const order of orders) {

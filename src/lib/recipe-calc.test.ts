@@ -8,9 +8,10 @@ import {
   sanitizeQuantity,
   totalPieces,
 } from "./recipe-calc.ts";
+import { RECIPES } from "./recipe-fixtures.ts";
 
 test("scales jalapeño cheddar x3 per the spec", () => {
-  const [card] = buildRecipeCards({ "Jalapeno Cheddar": 3 });
+  const [card] = buildRecipeCards(RECIPES, { "Jalapeno Cheddar": 3 });
   assert.deepEqual(
     card.ingredients.map((i) => [i.name, i.grams]),
     [
@@ -25,7 +26,7 @@ test("scales jalapeño cheddar x3 per the spec", () => {
 });
 
 test("keeps products as separate cards and skips zero quantities", () => {
-  const cards = buildRecipeCards({
+  const cards = buildRecipeCards(RECIPES, {
     "Jalapeno Cheddar": 3,
     "Rosemary Focaccia": 2,
     "Plain Sourdough": 0,
@@ -33,16 +34,16 @@ test("keeps products as separate cards and skips zero quantities", () => {
   assert.equal(cards.length, 2);
   assert.equal(cards[1].ingredients.find((i) => i.name === "Bread Flour")?.grams, 600);
   assert.equal(cards[1].ingredients.find((i) => i.name === "Extra Virgin Olive Oil")?.grams, 18);
-  assert.equal(totalPieces({ "Jalapeno Cheddar": 3, "Rosemary Focaccia": 2 }), 5);
+  assert.equal(totalPieces(RECIPES, { "Jalapeno Cheddar": 3, "Rosemary Focaccia": 2 }), 5);
 });
 
 test("rosemary and tomato pesto share one focaccia dough card", () => {
-  const cards = buildRecipeCards({ "Rosemary Focaccia": 1, "Tomato Pesto Focaccia": 1 });
+  const cards = buildRecipeCards(RECIPES, { "Rosemary Focaccia": 1, "Tomato Pesto Focaccia": 1 });
   assert.equal(cards.length, 1);
   assert.equal(cards[0].pieces, 2);
   assert.equal(cards[0].ingredients.find((i) => i.name === "Bread Flour")?.grams, 600);
   assert.equal(cardDetail(cards[0]), "1 Rosemary Focaccia + 1 Tomato Pesto Focaccia");
-  assert.equal(totalPieces({ "Rosemary Focaccia": 1, "Tomato Pesto Focaccia": 1 }), 2);
+  assert.equal(totalPieces(RECIPES, { "Rosemary Focaccia": 1, "Tomato Pesto Focaccia": 1 }), 2);
 });
 
 test("sanitizeQuantity rejects negatives, decimals and junk", () => {
@@ -61,13 +62,13 @@ test("aggregateQuantities sums per product for the chosen date only", () => {
     { bakeDate: "2026-11-22", items: [{ product: "Plain Sourdough", quantity: 3 }, { product: "Unknown Bun", quantity: 9 }] },
     { bakeDate: "2026-11-29", items: [{ product: "Plain Sourdough", quantity: 7 }] },
   ];
-  const q = aggregateQuantities(orders, "2026-11-22");
+  const q = aggregateQuantities(RECIPES, orders, "2026-11-22");
   assert.equal(q["Plain Sourdough"], 5);
   assert.equal(q["Rosemary Focaccia"], 1);
   assert.equal(q["Jalapeno Cheddar"], 0);
 });
 
 test("formatRecipeText formats headings and grams", () => {
-  const text = formatRecipeText(buildRecipeCards({ "Rosemary Focaccia": 1 }));
+  const text = formatRecipeText(buildRecipeCards(RECIPES, { "Rosemary Focaccia": 1 }));
   assert.match(text, /^Rosemary Focaccia — 1 Piece\nBread Flour: 300g/);
 });

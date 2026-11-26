@@ -1,5 +1,5 @@
 import "server-only";
-import { PRODUCTS, type Order } from "./orders";
+import type { Order } from "./orders";
 import { netTotal, scopeOrders } from "./order-scope";
 
 export type DashboardStats = {
@@ -18,6 +18,7 @@ export type DashboardStats = {
 export function computeDashboardStats(
   rawOrders: Order[],
   bakeDate: string | null,
+  products: readonly string[],
 ): DashboardStats {
   // Archived orders and repeated rows are not sales (same rule as Reports and Profitability).
   const { orders: allOrders, conflictingInvoiceIds } = scopeOrders(rawOrders);
@@ -30,7 +31,7 @@ export function computeDashboardStats(
     : allOrders;
 
   const productBreakdown: Record<string, number> = Object.fromEntries(
-    PRODUCTS.map((p) => [p, 0]),
+    products.map((p) => [p, 0]),
   );
   const unrecognized = new Set<string>();
 

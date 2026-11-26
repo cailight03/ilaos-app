@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const SECTIONS = [
   { href: "/admin/costing/ingredients", label: "Ingredients" },
   { href: "/admin/costing/products", label: "Product Costing" },
+  { href: "/admin/costing/catalog", label: "Catalog" },
   { href: "/admin/costing/expenses", label: "Expenses" },
 ] as const;
 

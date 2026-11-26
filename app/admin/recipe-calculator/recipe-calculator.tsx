@@ -8,7 +8,7 @@ import {
   formatRecipeText,
   totalPieces,
 } from "@/src/lib/recipe-calc";
-import { RECIPES, type Quantities, type RecipeId } from "@/src/lib/recipes";
+import { type Quantities, type Recipe, type RecipeId } from "@/src/lib/recipes";
 import { DatePicker } from "@/app/admin/_components/date-picker";
 import { IngredientCard } from "@/app/admin/_components/ingredient-card";
 import { QuantityInput } from "@/app/admin/_components/quantity-input";
@@ -18,14 +18,20 @@ import { StarterCalculator, type StarterRequest } from "./starter-calculator";
 
 type Notice = { kind: "error" | "success"; text: string } | null;
 
-export function RecipeCalculator({ initialBakeDate }: { initialBakeDate: string }) {
-  const [quantities, setQuantities] = useState<Quantities>(emptyQuantities);
+export function RecipeCalculator({
+  recipes,
+  initialBakeDate,
+}: {
+  recipes: readonly Recipe[];
+  initialBakeDate: string;
+}) {
+  const [quantities, setQuantities] = useState<Quantities>(() => emptyQuantities(recipes));
   const [bakeDate, setBakeDate] = useState(initialBakeDate);
   const [notice, setNotice] = useState<Notice>(null);
   const [loading, startLoad] = useTransition();
 
-  const cards = useMemo(() => buildRecipeCards(quantities), [quantities]);
-  const total = totalPieces(quantities);
+  const cards = useMemo(() => buildRecipeCards(recipes, quantities), [recipes, quantities]);
+  const total = totalPieces(recipes, quantities);
   const [starterRequest, setStarterRequest] = useState<StarterRequest | null>(null);
   const starterNeeded = useMemo(() => totalStarterGrams(cards), [cards]);
 
@@ -96,7 +102,7 @@ export function RecipeCalculator({ initialBakeDate }: { initialBakeDate: string 
           </span>
         </div>
         <div className="divide-y divide-separator rounded-xl border border-separator bg-card px-4 shadow-sm">
-          {RECIPES.map((r) => (
+          {recipes.map((r) => (
             <QuantityInput
               key={r.id}
               id={`qty-${r.id}`}
@@ -127,7 +133,7 @@ export function RecipeCalculator({ initialBakeDate }: { initialBakeDate: string 
           className={secondary}
           disabled={total === 0}
           onClick={() => {
-            setQuantities(emptyQuantities());
+            setQuantities(emptyQuantities(recipes));
             setNotice(null);
           }}
         >
